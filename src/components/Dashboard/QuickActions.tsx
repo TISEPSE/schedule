@@ -39,8 +39,8 @@ const studentActions = [
     color: 'bg-green-50 hover:bg-green-100 text-green-700',
   },
   {
-    title: 'Mes groupes',
-    description: 'Gérer mes groupes d\'étude',
+    title: 'Ma classe',
+    description: 'Voir ma classe et mes camarades',
     icon: Users,
     href: '/classes',
     color: 'bg-purple-50 hover:bg-purple-100 text-purple-700',
@@ -72,8 +72,8 @@ export default function QuickActions({ userRole }: QuickActionsProps) {
               <div className="flex items-center space-x-3">
                 <Icon className="h-5 w-5 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">{action.title}</p>
-                  <p className="text-xs opacity-75 truncate">{action.description}</p>
+                  <p className="text-base font-medium truncate">{action.title}</p>
+                  <p className="text-sm opacity-75 truncate">{action.description}</p>
                 </div>
               </div>
             </Link>

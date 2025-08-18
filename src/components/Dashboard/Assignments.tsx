@@ -69,14 +69,14 @@ export default function Assignments({ userRole }: AssignmentsProps) {
           <div key={index} className={`border-l-4 ${item.color} pl-3 py-2.5`}>
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h4 className="text-sm font-medium text-gray-900">{item.title}</h4>
-                <p className="text-xs text-gray-500 mt-0.5">{item.subject}</p>
+                <h4 className="text-base font-medium text-gray-900">{item.title}</h4>
+                <p className="text-sm text-gray-500 mt-0.5">{item.subject}</p>
               </div>
               <div className="flex items-center space-x-1">
                 {item.priority === 'high' && (
                   <AlertTriangle className="h-3 w-3 text-red-500" />
                 )}
-                <span className="text-xs text-gray-400">{item.dueDate}</span>
+                <span className="text-sm text-gray-400">{item.dueDate}</span>
               </div>
             </div>
           </div>

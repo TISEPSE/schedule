@@ -72,13 +72,13 @@ export default function RecentActivity({ userRole }: RecentActivityProps) {
                 <Icon className="h-4 w-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-base font-medium text-gray-900 truncate">
                   {activity.title}
                 </p>
                 <p className="text-sm text-gray-600 truncate">
                   {activity.description}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
+                <p className="text-sm text-gray-400 mt-1">{activity.time}</p>
               </div>
             </div>
           );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { User } from '@/types';
@@ -12,7 +12,20 @@ interface MainLayoutProps {
 }
 
 export default function MainLayout({ user, children, onLogout }: MainLayoutProps) {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    // Initialiser directement avec la valeur du localStorage si disponible
+    if (typeof window !== 'undefined') {
+      const savedState = localStorage.getItem('sidebarCollapsed');
+      return savedState !== null ? JSON.parse(savedState) : false;
+    }
+    return false;
+  });
+
+  const handleToggle = () => {
+    const newState = !isSidebarCollapsed;
+    setIsSidebarCollapsed(newState);
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -21,7 +34,7 @@ export default function MainLayout({ user, children, onLogout }: MainLayoutProps
         <Sidebar
           userRole={user.role}
           isCollapsed={isSidebarCollapsed}
-          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          onToggle={handleToggle}
         />
       </div>
       

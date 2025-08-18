@@ -61,19 +61,19 @@ export default function UpcomingEvents({ userRole }: UpcomingEventsProps) {
           <div key={index} className={`border-l-4 ${event.color} pl-4 py-2`}>
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h4 className="text-sm font-medium text-gray-900">{event.title}</h4>
+                <h4 className="text-base font-medium text-gray-900">{event.title}</h4>
                 <div className="flex items-center space-x-4 mt-1">
-                  <div className="flex items-center text-xs text-gray-500">
+                  <div className="flex items-center text-sm text-gray-500">
                     <Clock className="h-3 w-3 mr-1" />
                     {event.time}
                   </div>
-                  <div className="flex items-center text-xs text-gray-500">
+                  <div className="flex items-center text-sm text-gray-500">
                     <MapPin className="h-3 w-3 mr-1" />
                     {event.location}
                   </div>
                 </div>
               </div>
-              <span className="text-xs text-gray-400">{event.date}</span>
+              <span className="text-sm text-gray-400">{event.date}</span>
             </div>
           </div>
         ))}

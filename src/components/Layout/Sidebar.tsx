@@ -33,7 +33,7 @@ const adminNavItems = [
 const studentNavItems = [
   { icon: LayoutDashboard, label: 'Tableau de bord', href: '/dashboard' },
   { icon: Calendar, label: 'Mon planning', href: '/calendar' },
-  { icon: Users, label: 'Mes groupes', href: '/classes' },
+  { icon: Users, label: 'Ma classe', href: '/classes' },
   { icon: Building, label: 'Mon école', href: '/organization' },
   { icon: Settings, label: 'Paramètres', href: '/settings' },
   { icon: User, label: 'Mon profil', href: '/profile' },
@@ -84,7 +84,7 @@ export default function Sidebar({ userRole, isCollapsed, onToggle }: SidebarProp
       )}
 
       {/* Navigation */}
-      <nav className={`${isCollapsed ? 'p-2' : 'p-4'} space-y-2`}>
+      <nav className={`${isCollapsed ? 'p-2' : 'p-4'} space-y-3`}>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
@@ -96,7 +96,7 @@ export default function Sidebar({ userRole, isCollapsed, onToggle }: SidebarProp
               className={`flex items-center rounded-lg transition-colors group relative ${
                 isCollapsed 
                   ? 'justify-center p-3' 
-                  : 'space-x-2.5 px-2.5 py-1.5'
+                  : 'space-x-3 px-3 py-2'
               } ${
                 isActive
                   ? 'bg-blue-50 text-blue-700'
@@ -104,11 +104,11 @@ export default function Sidebar({ userRole, isCollapsed, onToggle }: SidebarProp
               }`}
               title={isCollapsed ? item.label : ''}
             >
-              <Icon className={`${isCollapsed ? 'h-6 w-6' : 'h-4 w-4'} ${
+              <Icon className={`${isCollapsed ? 'h-5 w-5' : 'h-4 w-4'} ${
                 isActive ? 'text-blue-600' : 'text-gray-500'
               }`} />
               {!isCollapsed && (
-                <span className="font-medium text-sm">{item.label}</span>
+                <span className="font-medium text-base">{item.label}</span>
               )}
               
               {/* Tooltip en mode replié */}
