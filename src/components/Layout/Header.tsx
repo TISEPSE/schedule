@@ -1,7 +1,44 @@
 'use client';
 
-import { Bell, Search, LogOut } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Bell, Search, LogOut, X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { User } from '@/types';
+
+// Mock notifications data
+const mockNotifications = [
+  {
+    id: '1',
+    type: 'info',
+    title: 'Nouveau cours ajouté',
+    message: 'Le cours de Mathématiques de demain a été ajouté à votre planning',
+    time: '5 min',
+    read: false
+  },
+  {
+    id: '2',
+    type: 'warning',
+    title: 'Changement d\'horaire',
+    message: 'Le cours de Physique est déplacé à 14h au lieu de 15h',
+    time: '1h',
+    read: false
+  },
+  {
+    id: '3',
+    type: 'success',
+    title: 'Devoir rendu',
+    message: 'Votre devoir de Français a été soumis avec succès',
+    time: '2h',
+    read: true
+  },
+  {
+    id: '4',
+    type: 'info',
+    title: 'Nouvelle personne ajoutée',
+    message: 'Sophie Chen a rejoint votre classe',
+    time: '1j',
+    read: true
+  }
+];
 
 interface HeaderProps {
   user: User;
@@ -9,6 +46,53 @@ interface HeaderProps {
 }
 
 export default function Header({ user, onLogout }: HeaderProps) {
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const unreadCount = mockNotifications.filter(n => !n.read).length;
+
+  // Gestion du clic en dehors
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+    };
+
+    if (showNotifications) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNotifications]);
+
+  // Gestion des touches clavier
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowNotifications(false);
+      }
+    };
+
+    if (showNotifications) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showNotifications]);
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'success': return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'warning': return <AlertCircle className="h-4 w-4 text-orange-500" />;
+      case 'info': 
+      default: return <Info className="h-4 w-4 text-blue-500" />;
+    }
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -27,10 +111,92 @@ export default function Header({ user, onLogout }: HeaderProps) {
         {/* Right Section */}
         <div className="flex items-center space-x-4">
           {/* Notifications */}
-          <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-            <Bell className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
-          </button>
+          <div className="relative" ref={notificationRef}>
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-3 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <Bell className="h-4.5 w-4.5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-red-500 rounded-full"></span>
+              )}
+            </button>
+
+            {/* Dropdown des notifications */}
+            {showNotifications && (
+              <div 
+                className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 focus:outline-none"
+                tabIndex={-1}
+                autoFocus
+              >
+                <div className="p-4 border-b border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+                    <button 
+                      onClick={() => setShowNotifications(false)}
+                      className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {unreadCount > 0 && (
+                    <p className="text-sm text-blue-600 mt-1">{unreadCount} nouvelle(s) notification(s)</p>
+                  )}
+                </div>
+
+                <div className="max-h-96 overflow-y-auto">
+                  {mockNotifications.length > 0 ? (
+                    <div className="p-3 space-y-4">
+                      {mockNotifications.map((notification) => (
+                        <div 
+                          key={notification.id} 
+                          className={`p-2.5 rounded-lg hover:bg-gray-50 transition-colors border-l-4 ${
+                            notification.read 
+                              ? 'border-transparent bg-gray-25' 
+                              : 'border-blue-400 bg-blue-25'
+                          }`}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0 mt-0.5">
+                              {getNotificationIcon(notification.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <p className={`text-sm font-medium ${
+                                  notification.read ? 'text-gray-700' : 'text-gray-900'
+                                }`}>
+                                  {notification.title}
+                                </p>
+                                <span className="text-xs text-gray-500">{notification.time}</span>
+                              </div>
+                              <p className={`text-sm mt-1 ${
+                                notification.read ? 'text-gray-500' : 'text-gray-600'
+                              }`}>
+                                {notification.message}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center">
+                      <Bell className="h-8 w-8 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500">Aucune notification</p>
+                    </div>
+                  )}
+                </div>
+
+                {mockNotifications.length > 0 && (
+                  <div className="p-3 border-t border-gray-100">
+                    <button className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium">
+                      Marquer tout comme lu
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* User Menu */}
           <div className="flex items-center space-x-3">

@@ -44,11 +44,11 @@ export default function Sidebar({ userRole, isCollapsed, onToggle }: SidebarProp
   const navItems = userRole === 'admin' ? adminNavItems : studentNavItems;
 
   return (
-    <aside className={`bg-white border-r border-gray-200 h-full transition-all duration-300 ${
+    <aside className={`bg-white h-full transition-all duration-300 ${
       isCollapsed ? 'w-16' : 'w-64'
     }`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between p-4">
         {!isCollapsed ? (
           <div className="flex items-center space-x-2">
             <GraduationCap className="h-8 w-8 text-blue-600" />
