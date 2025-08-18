@@ -7,25 +7,35 @@ interface WelcomeNotificationProps {
   userName: string;
   userRole: 'admin' | 'student';
   show: boolean;
+  onHide: () => void;
+  startTime: number | null;
 }
 
-export default function WelcomeNotification({ userName, userRole, show }: WelcomeNotificationProps) {
-  const [isVisible, setIsVisible] = useState(false);
+export default function WelcomeNotification({ userName, userRole, show, onHide, startTime }: WelcomeNotificationProps) {
+  // Calculer le temps écoulé pour synchroniser la barre de progression
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   useEffect(() => {
-    if (show) {
-      setIsVisible(true);
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-      }, 4000); // Disparaît après 4 secondes
+    if (!startTime) return;
 
-      return () => clearTimeout(timer);
-    } else {
-      setIsVisible(false);
-    }
-  }, [show]);
+    const updateElapsed = () => {
+      const elapsed = Date.now() - startTime;
+      setElapsedTime(elapsed);
+    };
 
-  if (!isVisible) return null;
+    // Mettre à jour immédiatement
+    updateElapsed();
+
+    // Puis mettre à jour toutes les 50ms pour une animation fluide
+    const interval = setInterval(updateElapsed, 50);
+
+    return () => clearInterval(interval);
+  }, [startTime]);
+
+  if (!show) return null;
+
+  // Calculer le pourcentage pour la barre de progression (4000ms = 100%)
+  const progressPercentage = Math.min((elapsedTime / 4000) * 100, 100);
 
   const message = userRole === 'admin' 
     ? `Bonjour ${userName}, bienvenue dans l'administration !` 
@@ -47,7 +57,7 @@ export default function WelcomeNotification({ userName, userRole, show }: Welcom
             </p>
           </div>
           <button
-            onClick={() => setIsVisible(false)}
+            onClick={onHide}
             className="flex-shrink-0 ml-2 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="h-4 w-4" />
@@ -56,7 +66,10 @@ export default function WelcomeNotification({ userName, userRole, show }: Welcom
         
         {/* Barre de progression */}
         <div className="mt-3 w-full bg-gray-200 rounded-full h-1">
-          <div className="bg-green-500 h-1 rounded-full animate-progress-bar"></div>
+          <div 
+            className="bg-green-500 h-1 rounded-full transition-all duration-75 ease-linear"
+            style={{ width: `${progressPercentage}%` }}
+          ></div>
         </div>
       </div>
     </div>

@@ -10,6 +10,8 @@ interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   showWelcome: boolean;
+  hideWelcome: () => void;
+  welcomeStartTime: number | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,6 +46,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeTimer, setWelcomeTimer] = useState<NodeJS.Timeout | null>(null);
+  const [welcomeStartTime, setWelcomeStartTime] = useState<number | null>(null);
 
   useEffect(() => {
     // Check for stored user on mount
@@ -85,10 +89,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('user', JSON.stringify(foundUser));
       setShowWelcome(true);
       
-      // Masquer automatiquement la notification après 5 secondes
-      setTimeout(() => {
+      // Enregistrer le moment de début
+      const startTime = Date.now();
+      setWelcomeStartTime(startTime);
+      
+      // Démarrer le timer une seule fois
+      if (welcomeTimer) {
+        clearTimeout(welcomeTimer);
+      }
+      
+      const timer = setTimeout(() => {
         setShowWelcome(false);
-      }, 5000);
+        setWelcomeTimer(null);
+        setWelcomeStartTime(null);
+      }, 4000);
+      
+      setWelcomeTimer(timer);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {
@@ -96,10 +112,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const hideWelcome = () => {
+    setShowWelcome(false);
+    setWelcomeStartTime(null);
+    if (welcomeTimer) {
+      clearTimeout(welcomeTimer);
+      setWelcomeTimer(null);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
     setShowWelcome(false);
+    setWelcomeStartTime(null);
+    if (welcomeTimer) {
+      clearTimeout(welcomeTimer);
+      setWelcomeTimer(null);
+    }
   };
 
   return (
@@ -110,6 +140,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       error,
       showWelcome,
+      hideWelcome,
+      welcomeStartTime,
     }}>
       {children}
     </AuthContext.Provider>

@@ -4,15 +4,17 @@ import { useAuth } from '@/context/AuthContext';
 import WelcomeNotification from '../Notification/WelcomeNotification';
 
 export default function NotificationContainer() {
-  const { user, showWelcome } = useAuth();
+  const { user, showWelcome, hideWelcome, welcomeStartTime } = useAuth();
 
-  if (!user) return null;
+  if (!user || !showWelcome) return null;
 
   return (
     <WelcomeNotification 
       userName={user.firstName} 
       userRole={user.role} 
-      show={showWelcome} 
+      show={showWelcome}
+      onHide={hideWelcome}
+      startTime={welcomeStartTime}
     />
   );
 }
