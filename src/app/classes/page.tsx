@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { redirect } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
 import { useState } from 'react';
-import { Users, Mail, Phone, MapPin, Award, BookOpen, Clock, MessageCircle, GraduationCap, UserCog, Plus, Grid, Layout } from 'lucide-react';
+import { Users, Mail, Phone, MapPin, Award, BookOpen, Clock, MessageCircle, GraduationCap, UserCog, Plus, Grid, Layout, FileText } from 'lucide-react';
 
 // Mock data pour la classe
 const mockClassmates = [
@@ -183,29 +183,26 @@ export default function ClassesPage() {
   return (
     <MainLayout user={user} onLogout={logout}>
       <div className="space-y-6">
-        {/* Header de la classe */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
-          <h1 className="text-2xl font-bold mb-2">Ma classe - Terminale S</h1>
-          <p className="text-blue-100">Gérez vos la classe et l&apos;équipe pédagogique</p>
-        </div>
-
-        {/* Statistiques de la classe */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-blue-50 rounded-2xl p-6 shadow-sm border border-blue-100 text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">{mockClassmates.length}</div>
-            <div className="text-base font-medium text-blue-700">Étudiants</div>
-          </div>
-          <div className="bg-purple-50 rounded-2xl p-6 shadow-sm border border-purple-100 text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-2">{mockTeachers.length + mockStaff.length}</div>
-            <div className="text-base font-medium text-purple-700">Membres de l'équipe éducative</div>
-          </div>
-          <div className="bg-green-50 rounded-2xl p-6 shadow-sm border border-green-100 text-center">
-            <div className="text-3xl font-bold text-green-600 mb-2">{mockClassmates.filter(s => s.status === 'online').length}</div>
-            <div className="text-base font-medium text-green-700">En ligne</div>
-          </div>
-          <div className="bg-orange-50 rounded-2xl p-6 shadow-sm border border-orange-100 text-center">
-            <div className="text-3xl font-bold text-orange-600 mb-2">12</div>
-            <div className="text-base font-medium text-orange-700">Matières</div>
+        {/* Actions rapides */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">Ma classe - BTS 1</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button className="p-4 text-center rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors">
+              <FileText className="h-6 w-6 mx-auto mb-2" />
+              <span className="text-sm font-medium">Documents et informations</span>
+            </button>
+            <button className="p-4 text-center rounded-xl bg-green-50 hover:bg-green-100 text-green-700 transition-colors">
+              <BookOpen className="h-6 w-6 mx-auto mb-2" />
+              <span className="text-sm font-medium">Projets</span>
+            </button>
+            <button className="p-4 text-center rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 transition-colors">
+              <Clock className="h-6 w-6 mx-auto mb-2" />
+              <span className="text-sm font-medium">Planning</span>
+            </button>
+            <button className="p-4 text-center rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 transition-colors">
+              <GraduationCap className="h-6 w-6 mx-auto mb-2" />
+              <span className="text-sm font-medium">Changer de niveau</span>
+            </button>
           </div>
         </div>
 
@@ -295,7 +292,7 @@ export default function ClassesPage() {
           </div>
 
           {/* Camarades de classe */}
-          <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 h-fit">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-2">
                 <Users className="h-6 w-6 text-purple-600" />
@@ -423,28 +420,26 @@ export default function ClassesPage() {
           </div>
         </div>
 
-        {/* Actions rapides */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions rapides</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button className="p-4 text-center rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors">
-              <MessageCircle className="h-6 w-6 mx-auto mb-2" />
-              <span className="text-sm font-medium">Groupe classe</span>
-            </button>
-            <button className="p-4 text-center rounded-xl bg-green-50 hover:bg-green-100 text-green-700 transition-colors">
-              <BookOpen className="h-6 w-6 mx-auto mb-2" />
-              <span className="text-sm font-medium">Projets</span>
-            </button>
-            <button className="p-4 text-center rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 transition-colors">
-              <Clock className="h-6 w-6 mx-auto mb-2" />
-              <span className="text-sm font-medium">Planning</span>
-            </button>
-            <button className="p-4 text-center rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 transition-colors">
-              <Users className="h-6 w-6 mx-auto mb-2" />
-              <span className="text-sm font-medium">Groupes</span>
-            </button>
+        {/* Statistiques de la classe */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-blue-50 rounded-2xl p-6 shadow-sm border border-blue-100 text-center">
+            <div className="text-3xl font-bold text-blue-600 mb-2">{mockClassmates.length}</div>
+            <div className="text-base font-medium text-blue-700">Étudiants</div>
+          </div>
+          <div className="bg-purple-50 rounded-2xl p-6 shadow-sm border border-purple-100 text-center">
+            <div className="text-3xl font-bold text-purple-600 mb-2">{mockTeachers.length + mockStaff.length}</div>
+            <div className="text-base font-medium text-purple-700">Membres de l'équipe éducative</div>
+          </div>
+          <div className="bg-green-50 rounded-2xl p-6 shadow-sm border border-green-100 text-center">
+            <div className="text-3xl font-bold text-green-600 mb-2">{mockClassmates.filter(s => s.status === 'online').length}</div>
+            <div className="text-base font-medium text-green-700">En ligne</div>
+          </div>
+          <div className="bg-orange-50 rounded-2xl p-6 shadow-sm border border-orange-100 text-center">
+            <div className="text-3xl font-bold text-orange-600 mb-2">12</div>
+            <div className="text-base font-medium text-orange-700">Matières</div>
           </div>
         </div>
+
       </div>
     </MainLayout>
   );

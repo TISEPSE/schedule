@@ -98,9 +98,9 @@ export default function Calendar() {
   const selectedEvents = selectedDate ? getEventsForDate(selectedDate) : [];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Calendrier principal */}
-      <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+      <div className="lg:col-span-3 bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
         {/* Header du calendrier */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-900">
@@ -148,29 +148,39 @@ export default function Calendar() {
             return (
               <button
                 key={`${day.getFullYear()}-${day.getMonth()}-${day.getDate()}-${index}`}
-                onClick={() => setSelectedDate(day)}
+                onClick={() => {
+                  if (!isCurrentMonth) {
+                    // Si c'est un jour d'un autre mois, naviguer vers ce mois
+                    setCurrentDate(new Date(day.getFullYear(), day.getMonth(), 1));
+                  }
+                  setSelectedDate(day);
+                }}
                 className={`p-4 h-28 border border-gray-200 transition-colors relative rounded-xl ${
-                  isCurrentMonth 
-                    ? 'hover:bg-gray-50' 
-                    : 'bg-gray-50 hover:bg-gray-100'
+                  isSelected 
+                    ? 'hover:bg-blue-400 hover:shadow-xl hover:ring-4 hover:ring-blue-150' 
+                    : isCurrentMonth 
+                      ? 'hover:bg-gray-50' 
+                      : 'bg-gray-50 hover:bg-gray-100'
                 } ${
                   isSelected 
                     ? isCurrentMonth 
-                      ? 'bg-blue-50 border-blue-300' 
-                      : 'bg-gray-100 border-gray-300' 
+                      ? 'bg-blue-500 border-blue-600 ring-2 ring-blue-300 shadow-lg' 
+                      : 'bg-blue-400 border-blue-500 ring-2 ring-blue-200 shadow-md' 
                     : ''
                 } ${
                   isToday 
-                    ? 'bg-blue-500 border-blue-600 ring-2 ring-blue-300 shadow-md' 
+                    ? 'bg-blue-100 border-blue-200' 
                     : ''
                 }`}
               >
                 <div className={`text-base font-bold ${
-                  isToday 
-                    ? 'text-white' 
-                    : isCurrentMonth 
-                      ? 'text-gray-900' 
-                      : 'text-gray-500'
+                  isSelected
+                    ? 'text-white'
+                    : isToday 
+                      ? 'text-blue-700' 
+                      : isCurrentMonth 
+                        ? 'text-gray-900' 
+                        : 'text-gray-500'
                 }`}>
                   {day.getDate()}
                 </div>
