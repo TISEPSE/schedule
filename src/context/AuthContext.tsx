@@ -9,6 +9,7 @@ interface AuthContextType {
   logout: () => void;
   isLoading: boolean;
   error: string | null;
+  showWelcome: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     // Check for stored user on mount
@@ -79,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser(foundUser);
       localStorage.setItem('user', JSON.stringify(foundUser));
+      setShowWelcome(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {
@@ -89,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    setShowWelcome(false);
   };
 
   return (
@@ -98,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       isLoading,
       error,
+      showWelcome,
     }}>
       {children}
     </AuthContext.Provider>

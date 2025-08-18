@@ -32,7 +32,7 @@ const adminNavItems = [
 
 const studentNavItems = [
   { icon: LayoutDashboard, label: 'Tableau de bord', href: '/dashboard' },
-  { icon: Calendar, label: 'Mon planning', href: '/calendar' },
+  { icon: Calendar, label: 'Mon calendrier', href: '/calendar' },
   { icon: Users, label: 'Ma classe', href: '/classes' },
   { icon: Building, label: 'Mon école', href: '/organization' },
   { icon: Settings, label: 'Paramètres', href: '/settings' },

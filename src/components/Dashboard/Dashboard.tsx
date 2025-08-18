@@ -76,26 +76,19 @@ const studentStats = [
     trend: 'actives',
   },
   {
-    title: 'Productivité',
-    value: '87%',
+    title: 'Objectifs',
+    value: '3/5',
     icon: TrendingUp,
     color: 'bg-orange-500',
-    trend: 'ce mois',
+    trend: 'complétés',
   },
 ];
 
 export default function Dashboard({ user }: DashboardProps) {
   const stats = user.role === 'admin' ? adminStats : studentStats;
-  const welcomeMessage = user.role === 'admin' 
-    ? `Administration - ${user.firstName}` 
-    : `Salut ${user.firstName} !`;
 
   return (
     <div className="space-y-6">
-      {/* Welcome Section - Compact */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-3 text-white">
-        <h1 className="text-lg font-semibold">{welcomeMessage}</h1>
-      </div>
 
       {/* Stats Grid - Full width */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import NotificationContainer from './NotificationContainer';
 import { User } from '@/types';
 
 interface MainLayoutProps {
@@ -49,6 +50,9 @@ export default function MainLayout({ user, children, onLogout }: MainLayoutProps
         <main className="flex-1 p-6 overflow-y-auto">
           {children}
         </main>
+        
+        {/* Notifications globales */}
+        <NotificationContainer />
       </div>
     </div>
   );
