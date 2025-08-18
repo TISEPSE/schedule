@@ -50,6 +50,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+      // Ne pas afficher la notification de bienvenue lors du chargement de la page
+      // La notification ne doit s'afficher qu'après une connexion manuelle
     }
   }, []);
 
@@ -82,6 +84,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(foundUser);
       localStorage.setItem('user', JSON.stringify(foundUser));
       setShowWelcome(true);
+      
+      // Masquer automatiquement la notification après 5 secondes
+      setTimeout(() => {
+        setShowWelcome(false);
+      }, 5000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {

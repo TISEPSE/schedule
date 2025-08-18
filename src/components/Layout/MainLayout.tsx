@@ -45,9 +45,16 @@ export default function MainLayout({ user, children, onLogout }: MainLayoutProps
           isSidebarCollapsed ? 'ml-16' : 'ml-64'
         }`}
       >
-        <Header user={user} onLogout={onLogout} />
+        {/* Header fixe */}
+        <div className="fixed top-0 right-0 z-20" style={{ 
+          left: isSidebarCollapsed ? '4rem' : '16rem',
+          transition: 'left 300ms'
+        }}>
+          <Header user={user} onLogout={onLogout} />
+        </div>
         
-        <main className="flex-1 p-6 overflow-y-auto">
+        {/* Main content avec padding-top pour compenser le header fixe */}
+        <main className="flex-1 p-6 overflow-y-auto" style={{ paddingTop: '5rem' }}>
           {children}
         </main>
         

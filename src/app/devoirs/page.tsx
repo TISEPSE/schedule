@@ -140,7 +140,7 @@ const daysOfWeek = [
 ];
 
 const typeLabels = {
-  homework: 'Exercices',
+  homework: 'Exercice',
   report: 'Rapport',
   essay: 'Rédaction',
   study: 'Révisions',
@@ -268,23 +268,23 @@ export default function DevoirsPage() {
                   selectedFilter === 'homework' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                Exercices
+                Exercice
               </button>
               <button 
-                onClick={() => setSelectedFilter('essay')}
+                onClick={() => setSelectedFilter('exam')}
                 className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                  selectedFilter === 'essay' ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:bg-gray-100'
+                  selectedFilter === 'exam' ? 'bg-red-100 text-red-700' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                Rédactions
+                Évaluation
               </button>
               <button 
-                onClick={() => setSelectedFilter('study')}
+                onClick={() => setSelectedFilter('project')}
                 className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                  selectedFilter === 'study' ? 'bg-red-100 text-red-700' : 'text-gray-600 hover:bg-gray-100'
+                  selectedFilter === 'project' ? 'bg-green-100 text-green-700' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                Révisions
+                Travail en groupe
               </button>
             </div>
           </div>

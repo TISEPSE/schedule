@@ -94,7 +94,7 @@ export default function Header({ user, onLogout }: HeaderProps) {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
+    <header className="bg-white border-b border-gray-200 px-6 py-4 w-full">
       <div className="flex items-center justify-between">
         {/* Search Bar */}
         <div className="flex-1 max-w-md">

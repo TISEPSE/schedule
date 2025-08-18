@@ -20,6 +20,8 @@ export default function WelcomeNotification({ userName, userRole, show }: Welcom
       }, 4000); // Disparaît après 4 secondes
 
       return () => clearTimeout(timer);
+    } else {
+      setIsVisible(false);
     }
   }, [show]);
 
