@@ -28,14 +28,14 @@ const studentActions = [
     title: 'Planifier un événement',
     description: 'Ajouter à mon emploi du temps',
     icon: Plus,
-    href: '/calendar/new',
+    href: '/calendar',
     color: 'bg-blue-50 hover:bg-blue-100 text-blue-700',
   },
   {
-    title: 'Mon planning',
-    description: 'Voir mon emploi du temps',
+    title: 'Mes devoirs',
+    description: 'Voir mes tâches à faire',
     icon: Calendar,
-    href: '/calendar',
+    href: '/devoirs',
     color: 'bg-green-50 hover:bg-green-100 text-green-700',
   },
   {

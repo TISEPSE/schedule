@@ -12,7 +12,10 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
-  GraduationCap
+  GraduationCap,
+  FileText,
+  CalendarDays,
+  ClipboardList
 } from 'lucide-react';
 import { UserRole } from '@/types';
 
@@ -32,7 +35,9 @@ const adminNavItems = [
 
 const studentNavItems = [
   { icon: LayoutDashboard, label: 'Tableau de bord', href: '/dashboard' },
-  { icon: Calendar, label: 'Mon calendrier', href: '/calendar' },
+  { icon: CalendarDays, label: 'Mon calendrier', href: '/calendar' },
+  { icon: ClipboardList, label: 'Mes devoirs', href: '/devoirs' },
+  { icon: FileText, label: 'Mon bulletin', href: '/bulletin' },
   { icon: Users, label: 'Ma classe', href: '/classes' },
   { icon: Building, label: 'Mon école', href: '/organization' },
   { icon: Settings, label: 'Paramètres', href: '/settings' },
