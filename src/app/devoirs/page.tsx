@@ -199,7 +199,7 @@ export default function DevoirsPage() {
   };
 
   const getDayDate = (dayKey: string) => {
-    const dates = {
+    const dates: Record<string, string> = {
       monday: '15',
       tuesday: '16', 
       wednesday: '17',

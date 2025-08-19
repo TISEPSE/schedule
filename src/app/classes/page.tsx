@@ -390,7 +390,7 @@ export default function ClassesPage() {
                 
                 {/* Disposition des bureaux (3 rangées de 2 colonnes) */}
                 <div className="grid grid-cols-2 gap-x-12 gap-y-6 max-w-md mx-auto">
-                  {mockClassmates.map((classmate, index) => (
+                  {mockClassmates.map((classmate) => (
                     <div key={classmate.id} className="flex flex-col items-center">
                       {/* Bureau avec étudiant assis */}
                       <div className="w-16 h-12 bg-amber-100 border-2 border-amber-200 rounded-lg mb-2 relative">
