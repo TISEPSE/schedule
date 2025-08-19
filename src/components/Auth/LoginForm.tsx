@@ -120,6 +120,7 @@ export default function LoginForm({ onLogin, isLoading, error }: LoginFormProps)
             <div className="text-xs text-gray-500 space-y-1">
               <p><strong>Marie:</strong> marie.dupont@student.com / marie123</p>
               <p><strong>Thomas:</strong> thomas.martin@student.com / thomas123</p>
+              <p><strong>Test (vide):</strong> test@app.com / test123 ou vide</p>
               <p className="text-gray-400"><strong>Admin:</strong> admin@app.com / admin123</p>
             </div>
           </div>

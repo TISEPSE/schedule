@@ -39,6 +39,13 @@ const mockUsers: User[] = [
     lastName: 'Martin',
     role: 'student',
   },
+  {
+    id: '4',
+    email: 'test@app.com',
+    firstName: 'Utilisateur',
+    lastName: 'Test',
+    role: 'student',
+  },
 ];
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -79,9 +86,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         'admin@app.com': 'admin123',
         'marie.dupont@student.com': 'marie123',
         'thomas.martin@student.com': 'thomas123',
+        'test@app.com': 'test123',
       };
 
-      if (validPasswords[email] !== password) {
+      if (validPasswords[email] !== password && !(email === 'test@app.com' && password === '')) {
         throw new Error('Email ou mot de passe incorrect');
       }
 

@@ -9,6 +9,7 @@ import UpcomingEvents from './UpcomingEvents';
 import WeatherWidget from './WeatherWidget';
 import NextClass from './NextClass';
 import Assignments from './Assignments';
+import DataTestPanel from '../Test/DataTestPanel';
 
 interface DashboardProps {
   user: User;
@@ -148,6 +149,9 @@ export default function Dashboard({ user }: DashboardProps) {
           
         </div>
       )}
+      
+      {/* Panel de test réactivé après correction de la boucle infinie */}
+      <DataTestPanel userId={user.id} />
     </div>
   );
 }
