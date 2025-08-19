@@ -121,7 +121,7 @@ export default function BulletinPage() {
                 Consultez et gérez les bulletins de tous les étudiants.
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                Fonctionnalités prévues : vue d'ensemble, export PDF, statistiques générales...
+                Fonctionnalités prévues : vue d&apos;ensemble, export PDF, statistiques générales...
               </p>
             </div>
           </div>

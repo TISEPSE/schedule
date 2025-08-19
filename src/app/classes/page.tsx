@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { redirect } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
 import { useState } from 'react';
-import { Users, Mail, Phone, MapPin, Award, BookOpen, Clock, MessageCircle, GraduationCap, UserCog, Plus, Grid, Layout, FileText } from 'lucide-react';
+import { Users, Mail, MapPin, Award, BookOpen, Clock, MessageCircle, GraduationCap, UserCog, Plus, Grid, Layout, FileText } from 'lucide-react';
 
 // Mock data pour la classe
 const mockClassmates = [

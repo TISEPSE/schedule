@@ -23,7 +23,7 @@ export default function SettingsPage() {
               La page paramètres sera développée prochainement.
             </p>
             <p className="text-sm text-gray-500 mt-2">
-              Fonctionnalités prévues : configuration de l'école, notifications, préférences, etc.
+              Fonctionnalités prévues : configuration de l&apos;école, notifications, préférences, etc.
             </p>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { Cloud, Sun, CloudRain, Thermometer } from 'lucide-react';
+import { Cloud, Thermometer } from 'lucide-react';
 
 export default function WeatherWidget() {
   // Mock weather data

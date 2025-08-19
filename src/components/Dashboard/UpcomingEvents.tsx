@@ -10,7 +10,7 @@ const adminEvents = [
     title: 'Maintenance serveur',
     time: '14:00',
     location: 'À distance',
-    date: 'Aujourd\'hui',
+    date: 'Aujourd&apos;hui',
     color: 'border-l-blue-500',
   },
   {
@@ -27,7 +27,7 @@ const studentEvents = [
     title: 'Cours de Maths',
     time: '14:00',
     location: 'Bibliothèque',
-    date: 'Aujourd\'hui',
+    date: 'Aujourd&apos;hui',
     color: 'border-l-blue-500',
   },
   {
@@ -81,7 +81,7 @@ export default function UpcomingEvents({ userRole }: UpcomingEventsProps) {
       
       <div className="mt-4 pt-4 border-t border-gray-100">
         <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-          Voir tout l'agenda →
+          Voir tout l&apos;agenda →
         </button>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { FileText, Calendar, AlertTriangle } from 'lucide-react';
+import { FileText, AlertTriangle } from 'lucide-react';
 import { UserRole } from '@/types';
 
 interface AssignmentsProps {
@@ -33,7 +33,7 @@ const adminTasks = [
   {
     title: 'Modération utilisateurs',
     subject: 'Administration',
-    dueDate: 'Aujourd\'hui',
+    dueDate: 'Aujourd&apos;hui',
     priority: 'high',
     color: 'border-l-red-500',
   },
@@ -45,7 +45,7 @@ const adminTasks = [
     color: 'border-l-orange-500',
   },
   {
-    title: 'Rapport d\'activité',
+    title: 'Rapport d&apos;activité',
     subject: 'Administratif',
     dueDate: 'Fin du mois',
     priority: 'low',

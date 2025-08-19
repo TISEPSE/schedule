@@ -29,10 +29,10 @@ export default function CalendarPage() {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="bg-gray-50 rounded-lg p-8 text-center">
               <p className="text-gray-600">
-                Supervisez l'activité des plannings utilisateurs.
+                Supervisez l&apos;activité des plannings utilisateurs.
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                Fonctionnalités prévues : statistiques d'usage, modération des contenus...
+                Fonctionnalités prévues : statistiques d&apos;usage, modération des contenus...
               </p>
             </div>
           </div>

@@ -9,7 +9,7 @@ const adminActivities = [
   {
     icon: UserPlus,
     title: 'Nouvel utilisateur',
-    description: 'Marie Dubois s\'est inscrite',
+    description: 'Marie Dubois s&apos;est inscrite',
     time: 'Il y a 2h',
     color: 'text-blue-600',
   },
@@ -87,7 +87,7 @@ export default function RecentActivity({ userRole }: RecentActivityProps) {
       
       <div className="mt-4 pt-4 border-t border-gray-100">
         <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-          Voir toute l'activité →
+          Voir toute l&apos;activité →
         </button>
       </div>
     </div>

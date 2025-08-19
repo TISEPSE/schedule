@@ -55,7 +55,7 @@ const adminStats = [
 
 const studentStats = [
   {
-    title: 'Aujourd\'hui',
+    title: 'Aujourd&apos;hui',
     value: '6',
     icon: Calendar,
     color: 'bg-blue-500',

@@ -1,4 +1,4 @@
-import { Plus, Calendar, Users, FileText, Settings } from 'lucide-react';
+import { Plus, Calendar, Users, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { UserRole } from '@/types';
 

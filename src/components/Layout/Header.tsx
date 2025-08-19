@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bell, Search, LogOut, X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { User } from '@/types';
+import Image from 'next/image';
 
 // Mock notifications data
 const mockNotifications = [
@@ -208,9 +209,11 @@ export default function Header({ user, onLogout }: HeaderProps) {
             </div>
             
             {user.avatar ? (
-              <img
+              <Image
                 src={user.avatar}
                 alt={`${user.firstName} ${user.lastName}`}
+                width={32}
+                height={32}
                 className="h-8 w-8 rounded-full object-cover"
               />
             ) : (

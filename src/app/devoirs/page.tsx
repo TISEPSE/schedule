@@ -211,10 +211,6 @@ export default function DevoirsPage() {
     return dates[dayKey] || '';
   };
 
-  const toggleDevoir = (devoirId: string) => {
-    // Ici on pourrait mettre à jour l'état du devoir
-    console.log('Toggle devoir:', devoirId);
-  };
 
   return (
     <MainLayout user={user} onLogout={logout}>

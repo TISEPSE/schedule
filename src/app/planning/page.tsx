@@ -169,7 +169,7 @@ export default function PlanningPage() {
                 Gérez les plannings de tous les étudiants et créez de nouveaux événements.
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                Fonctionnalités prévues : création d'événements, gestion globale, templates...
+                Fonctionnalités prévues : création d&apos;événements, gestion globale, templates...
               </p>
             </div>
           </div>

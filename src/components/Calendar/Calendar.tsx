@@ -117,7 +117,7 @@ export default function Calendar() {
               onClick={() => setCurrentDate(new Date())}
               className="px-4 py-2 text-sm bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
             >
-              Aujourd'hui
+              Aujourd&apos;hui
             </button>
             <button
               onClick={() => navigateMonth('next')}
@@ -242,7 +242,7 @@ export default function Calendar() {
 
         {/* Légende */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-base font-semibold text-gray-900 mb-3">Types d'événements</h3>
+          <h3 className="text-base font-semibold text-gray-900 mb-3">Types d&apos;événements</h3>
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 rounded-full bg-blue-500"></div>

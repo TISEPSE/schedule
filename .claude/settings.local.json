@@ -6,7 +6,11 @@
       "Bash(npm install:*)",
       "Bash(npx next:*)",
       "Bash(rm \"D:\\Visual_Studio_Code\\Portfolio_Dev\\Application Emplois du temps\\schedule\\src\\app\\planning\\page.tsx\")",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(find:*)",
+      "Bash(rg:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx eslint:*)"
     ],
     "deny": [],
     "ask": []
