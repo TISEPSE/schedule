@@ -5,7 +5,8 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(npm install:*)",
       "Bash(npx next:*)",
-      "Bash(rm \"D:\\Visual_Studio_Code\\Portfolio_Dev\\Application Emplois du temps\\schedule\\src\\app\\planning\\page.tsx\")"
+      "Bash(rm \"D:\\Visual_Studio_Code\\Portfolio_Dev\\Application Emplois du temps\\schedule\\src\\app\\planning\\page.tsx\")",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []
