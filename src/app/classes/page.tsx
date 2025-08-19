@@ -428,7 +428,7 @@ export default function ClassesPage() {
           </div>
           <div className="bg-purple-50 rounded-2xl p-6 shadow-sm border border-purple-100 text-center">
             <div className="text-3xl font-bold text-purple-600 mb-2">{mockTeachers.length + mockStaff.length}</div>
-            <div className="text-base font-medium text-purple-700">Membres de l'équipe éducative</div>
+            <div className="text-base font-medium text-purple-700">Membres de l&apos;équipe éducative</div>
           </div>
           <div className="bg-green-50 rounded-2xl p-6 shadow-sm border border-green-100 text-center">
             <div className="text-3xl font-bold text-green-600 mb-2">{mockClassmates.filter(s => s.status === 'online').length}</div>
