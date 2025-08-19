@@ -128,7 +128,7 @@ export class NeonStorage {
     }
   }
 
-  static async upsertUser(user: any): Promise<NeonUser> {
+  static async upsertUser(user: Partial<NeonUser>): Promise<NeonUser> {
     const client = await pool.connect();
     try {
       const result = await client.query(`
@@ -142,7 +142,7 @@ export class NeonStorage {
           avatar = EXCLUDED.avatar,
           updated_at = CURRENT_TIMESTAMP
         RETURNING *;
-      `, [user.id, user.email, user.firstName, user.lastName, user.role, user.avatar]);
+      `, [user.id, user.email, user.first_name, user.last_name, user.role, user.avatar]);
       return result.rows[0];
     } finally {
       client.release();
@@ -154,7 +154,7 @@ export class NeonStorage {
     const client = await pool.connect();
     try {
       let query = 'SELECT * FROM assignments WHERE user_id = $1';
-      let params = [userId];
+      const params: (string | Date)[] = [userId];
       
       if (lastSync) {
         query += ' AND updated_at > $2';
@@ -168,7 +168,7 @@ export class NeonStorage {
     }
   }
 
-  static async upsertAssignment(assignment: any): Promise<NeonAssignment> {
+  static async upsertAssignment(assignment: Partial<NeonAssignment>): Promise<NeonAssignment> {
     const client = await pool.connect();
     try {
       const result = await client.query(`
@@ -185,8 +185,8 @@ export class NeonStorage {
           updated_at = CURRENT_TIMESTAMP
         RETURNING *;
       `, [
-        assignment.id, assignment.userId, assignment.title, assignment.description,
-        assignment.subject, assignment.type, assignment.dueDate, assignment.completed, assignment.priority
+        assignment.id, assignment.user_id, assignment.title, assignment.description,
+        assignment.subject, assignment.type, assignment.due_date, assignment.completed, assignment.priority
       ]);
       return result.rows[0];
     } finally {
@@ -208,7 +208,7 @@ export class NeonStorage {
     const client = await pool.connect();
     try {
       let query = 'SELECT * FROM events WHERE user_id = $1';
-      let params = [userId];
+      const params: (string | Date)[] = [userId];
       
       if (lastSync) {
         query += ' AND updated_at > $2';
@@ -222,7 +222,7 @@ export class NeonStorage {
     }
   }
 
-  static async upsertEvent(event: any): Promise<NeonEvent> {
+  static async upsertEvent(event: Partial<NeonEvent>): Promise<NeonEvent> {
     const client = await pool.connect();
     try {
       const result = await client.query(`
@@ -238,8 +238,8 @@ export class NeonStorage {
           updated_at = CURRENT_TIMESTAMP
         RETURNING *;
       `, [
-        event.id, event.userId, event.title, event.description,
-        event.type, event.startTime, event.endTime, event.location
+        event.id, event.user_id, event.title, event.description,
+        event.type, event.start_time, event.end_time, event.location
       ]);
       return result.rows[0];
     } finally {

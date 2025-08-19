@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { MockDataService } from '@/lib/services/mockDataService';
 
+export const dynamic = 'force-dynamic';
+
 // API Route mockée qui simule la connexion à Neon
 export async function GET() {
   try {

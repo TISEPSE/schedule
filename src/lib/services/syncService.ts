@@ -1,7 +1,6 @@
 'use client';
 
-import { LocalStorage, User, Assignment, Event } from '@/lib/database/local';
-import { NeonStorage } from '@/lib/database/neon';
+import { LocalStorage, User, Assignment, Event, SyncLog } from '@/lib/database/local';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface SyncStatus {
@@ -145,7 +144,7 @@ export class SyncService {
     }
   }
 
-  private static async processSyncLog(syncLog: any): Promise<void> {
+  private static async processSyncLog(syncLog: SyncLog): Promise<void> {
     const data = syncLog.data ? JSON.parse(syncLog.data) : null;
 
     switch (syncLog.tableName) {

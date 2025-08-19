@@ -3,6 +3,7 @@
 import { useAuth } from '@/context/AuthContext';
 import { redirect } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
+import { useTestUser } from '@/hooks/useTestUser';
 import { 
   MapPin, 
   Phone, 
@@ -21,7 +22,7 @@ import {
 } from 'lucide-react';
 
 // Mock data pour l'école
-const schoolData = {
+const mockSchoolData = {
   name: "Lycée Technologique Jean Monnet",
   logo: "/api/placeholder/120/120", // Placeholder pour le logo
   description: "Établissement d'excellence fondé en 1985, spécialisé dans les formations technologiques et professionnelles. Notre mission est de former les leaders de demain dans un environnement stimulant et bienveillant.",
@@ -81,6 +82,7 @@ const schoolData = {
 
 export default function OrganizationPage() {
   const { user, logout } = useAuth();
+  const { isTestUser } = useTestUser(user);
 
   if (!user) {
     redirect('/');
@@ -106,12 +108,33 @@ export default function OrganizationPage() {
     );
   }
 
+  // Données vides pour l'utilisateur test
+  const displayData = isTestUser ? {
+    name: "Aucun établissement configuré",
+    description: "Aucune information d'établissement disponible pour cet utilisateur de test.",
+    address: { street: "", city: "", country: "" },
+    contact: { phone: "", email: "", website: "" },
+    director: { name: "", title: "", email: "", avatar: "" },
+    stats: { students: 0, teachers: 0, classes: 0, foundedYear: 0 },
+    socialMedia: { facebook: "", instagram: "", linkedin: "", twitter: "" },
+    facilities: [],
+    schedule: {
+      monday: "",
+      tuesday: "",
+      wednesday: "",
+      thursday: "",
+      friday: "",
+      saturday: "",
+      sunday: ""
+    }
+  } : mockSchoolData;
+
   return (
     <MainLayout user={user} onLogout={logout}>
       <div className="space-y-6">
         
         {/* Header avec logo et nom de l'école */}
-        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center space-x-6">
             <div className="flex-shrink-0">
               <div className="w-24 h-24 bg-blue-600 rounded-2xl flex items-center justify-center">
@@ -119,8 +142,8 @@ export default function OrganizationPage() {
               </div>
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{schoolData.name}</h1>
-              <p className="text-gray-600 leading-relaxed">{schoolData.description}</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">{displayData.name}</h1>
+              <p className="text-gray-600 leading-relaxed">{displayData.description}</p>
             </div>
           </div>
         </div>
@@ -138,24 +161,24 @@ export default function OrganizationPage() {
               <div className="flex items-center space-x-4 p-4 bg-blue-50 rounded-xl">
                 <MapPin className="h-5 w-5 text-blue-600" />
                 <div>
-                  <p className="font-semibold text-blue-700">{schoolData.address.street}</p>
-                  <p className="text-blue-600 text-sm">{schoolData.address.city}</p>
+                  <p className="font-semibold text-blue-700">{displayData.address.street}</p>
+                  <p className="text-blue-600 text-sm">{displayData.address.city}</p>
                 </div>
               </div>
               
               <div className="flex items-center space-x-4 p-4 bg-green-50 rounded-xl">
                 <Phone className="h-5 w-5 text-green-600" />
-                <p className="font-semibold text-green-700">{schoolData.contact.phone}</p>
+                <p className="font-semibold text-green-700">{displayData.contact.phone}</p>
               </div>
               
               <div className="flex items-center space-x-4 p-4 bg-purple-50 rounded-xl">
                 <Mail className="h-5 w-5 text-purple-600" />
-                <p className="font-semibold text-purple-700">{schoolData.contact.email}</p>
+                <p className="font-semibold text-purple-700">{displayData.contact.email}</p>
               </div>
               
               <div className="flex items-center space-x-4 p-4 bg-orange-50 rounded-xl hover:bg-orange-100 transition-colors">
                 <Globe className="h-5 w-5 text-orange-600" />
-                <a href={schoolData.contact.website} className="text-orange-700 font-semibold hover:text-orange-800 flex items-center space-x-2">
+                <a href={displayData.contact.website} className="text-orange-700 font-semibold hover:text-orange-800 flex items-center space-x-2">
                   <span>Site web officiel</span>
                   <ExternalLink className="h-4 w-4" />
                 </a>
@@ -172,12 +195,12 @@ export default function OrganizationPage() {
             
             <div className="text-center space-y-4 flex-1 flex flex-col justify-center">
               <div className="w-20 h-20 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto">
-                {schoolData.director.avatar}
+                {displayData.director.avatar}
               </div>
               <div className="p-4 bg-purple-50 rounded-xl">
-                <h3 className="font-bold text-purple-700 text-lg mb-2">{schoolData.director.name}</h3>
-                <p className="text-purple-600 font-semibold text-base mb-3">{schoolData.director.title}</p>
-                <a href={`mailto:${schoolData.director.email}`} className="inline-flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors">
+                <h3 className="font-bold text-purple-700 text-lg mb-2">{displayData.director.name}</h3>
+                <p className="text-purple-600 font-semibold text-base mb-3">{displayData.director.title}</p>
+                <a href={`mailto:${displayData.director.email}`} className="inline-flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors">
                   <Mail className="h-4 w-4" />
                   <span>Contacter</span>
                 </a>
@@ -195,31 +218,31 @@ export default function OrganizationPage() {
             <div className="space-y-3">
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="font-semibold text-gray-700 text-base">Lundi</span>
-                <span className="text-green-600 font-bold text-base">{schoolData.schedule.monday}</span>
+                <span className="text-green-600 font-bold text-base">{displayData.schedule.monday}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="font-semibold text-gray-700 text-base">Mardi</span>
-                <span className="text-green-600 font-bold text-base">{schoolData.schedule.tuesday}</span>
+                <span className="text-green-600 font-bold text-base">{displayData.schedule.tuesday}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="font-semibold text-gray-700 text-base">Mercredi</span>
-                <span className="text-blue-600 font-bold text-base">{schoolData.schedule.wednesday}</span>
+                <span className="text-blue-600 font-bold text-base">{displayData.schedule.wednesday}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="font-semibold text-gray-700 text-base">Jeudi</span>
-                <span className="text-green-600 font-bold text-base">{schoolData.schedule.thursday}</span>
+                <span className="text-green-600 font-bold text-base">{displayData.schedule.thursday}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="font-semibold text-gray-700 text-base">Vendredi</span>
-                <span className="text-orange-600 font-bold text-base">{schoolData.schedule.friday}</span>
+                <span className="text-orange-600 font-bold text-base">{displayData.schedule.friday}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="font-semibold text-gray-700 text-base">Samedi</span>
-                <span className="text-gray-500 font-bold text-base">{schoolData.schedule.saturday}</span>
+                <span className="text-gray-500 font-bold text-base">{displayData.schedule.saturday}</span>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="font-semibold text-gray-700 text-base">Dimanche</span>
-                <span className="text-gray-500 font-bold text-base">{schoolData.schedule.sunday}</span>
+                <span className="text-gray-500 font-bold text-base">{displayData.schedule.sunday}</span>
               </div>
             </div>
           </div>
@@ -235,22 +258,22 @@ export default function OrganizationPage() {
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="bg-blue-50 rounded-xl p-6 text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-2">{schoolData.stats.students}</div>
+              <div className="text-3xl font-bold text-blue-600 mb-2">{displayData.stats.students}</div>
               <div className="text-base font-medium text-blue-700">Étudiants</div>
             </div>
             
             <div className="bg-green-50 rounded-xl p-6 text-center">
-              <div className="text-3xl font-bold text-green-600 mb-2">{schoolData.stats.teachers}</div>
+              <div className="text-3xl font-bold text-green-600 mb-2">{displayData.stats.teachers}</div>
               <div className="text-base font-medium text-green-700">Enseignants</div>
             </div>
             
             <div className="bg-purple-50 rounded-xl p-6 text-center">
-              <div className="text-3xl font-bold text-purple-600 mb-2">{schoolData.stats.classes}</div>
+              <div className="text-3xl font-bold text-purple-600 mb-2">{displayData.stats.classes}</div>
               <div className="text-base font-medium text-purple-700">Classes</div>
             </div>
             
             <div className="bg-orange-50 rounded-xl p-6 text-center">
-              <div className="text-3xl font-bold text-orange-600 mb-2">{schoolData.stats.foundedYear}</div>
+              <div className="text-3xl font-bold text-orange-600 mb-2">{displayData.stats.foundedYear}</div>
               <div className="text-base font-medium text-orange-700">Fondé en</div>
             </div>
           </div>
@@ -266,7 +289,7 @@ export default function OrganizationPage() {
             </div>
             
             <div className="grid grid-cols-1 gap-4">
-              <a href={schoolData.socialMedia.facebook} className="flex items-center justify-between p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
+              <a href={displayData.socialMedia.facebook} className="flex items-center justify-between p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
                 <div className="flex items-center space-x-4">
                   <Facebook className="h-6 w-6 text-blue-600" />
                   <span className="font-semibold text-blue-700 text-lg">Facebook</span>
@@ -274,7 +297,7 @@ export default function OrganizationPage() {
                 <ExternalLink className="h-5 w-5 text-blue-600" />
               </a>
               
-              <a href={schoolData.socialMedia.instagram} className="flex items-center justify-between p-4 bg-pink-50 rounded-xl hover:bg-pink-100 transition-colors">
+              <a href={displayData.socialMedia.instagram} className="flex items-center justify-between p-4 bg-pink-50 rounded-xl hover:bg-pink-100 transition-colors">
                 <div className="flex items-center space-x-4">
                   <Instagram className="h-6 w-6 text-pink-600" />
                   <span className="font-semibold text-pink-700 text-lg">Instagram</span>
@@ -282,7 +305,7 @@ export default function OrganizationPage() {
                 <ExternalLink className="h-5 w-5 text-pink-600" />
               </a>
               
-              <a href={schoolData.socialMedia.linkedin} className="flex items-center justify-between p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
+              <a href={displayData.socialMedia.linkedin} className="flex items-center justify-between p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
                 <div className="flex items-center space-x-4">
                   <Linkedin className="h-6 w-6 text-blue-600" />
                   <span className="font-semibold text-blue-700 text-lg">LinkedIn</span>
@@ -290,7 +313,7 @@ export default function OrganizationPage() {
                 <ExternalLink className="h-5 w-5 text-blue-600" />
               </a>
               
-              <a href={schoolData.socialMedia.twitter} className="flex items-center justify-between p-4 bg-sky-50 rounded-xl hover:bg-sky-100 transition-colors">
+              <a href={displayData.socialMedia.twitter} className="flex items-center justify-between p-4 bg-sky-50 rounded-xl hover:bg-sky-100 transition-colors">
                 <div className="flex items-center space-x-4">
                   <Twitter className="h-6 w-6 text-sky-600" />
                   <span className="font-semibold text-sky-700 text-lg">Twitter</span>

@@ -4,13 +4,14 @@ import { useAuth } from '@/context/AuthContext';
 import { redirect } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
 import Calendar from '@/components/Calendar/Calendar';
-
 export default function CalendarPage() {
   const { user, logout } = useAuth();
 
   if (!user) {
     redirect('/');
   }
+
+  // Utilisateur test : interface normale mais données vides (sera géré par le composant Calendar)
 
   return (
     <MainLayout user={user} onLogout={logout}>
@@ -26,7 +27,7 @@ export default function CalendarPage() {
         {user.role === 'student' ? (
           <Calendar />
         ) : (
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <div className="bg-gray-50 rounded-lg p-8 text-center">
               <p className="text-gray-600">
                 Supervisez l&apos;activité des plannings utilisateurs.

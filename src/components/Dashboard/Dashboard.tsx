@@ -10,6 +10,7 @@ import WeatherWidget from './WeatherWidget';
 import NextClass from './NextClass';
 import Assignments from './Assignments';
 import DataTestPanel from '../Test/DataTestPanel';
+import { useData } from '@/hooks/useData';
 
 interface DashboardProps {
   user: User;
@@ -86,7 +87,44 @@ const studentStats = [
 ];
 
 export default function Dashboard({ user }: DashboardProps) {
-  const stats = user.role === 'admin' ? adminStats : studentStats;
+  const { assignments, events } = useData(user.id);
+  
+  // Utiliser les vraies données seulement pour l'utilisateur test, sinon données statiques
+  const isTestUser = user.id === '4' || user.email === 'test@app.com';
+  
+  // Stats vides pour l'utilisateur test (avec les vraies couleurs)
+  const emptyStats = [
+    {
+      title: "Aujourd'hui",
+      value: '0',
+      icon: Calendar,
+      color: 'bg-blue-500',
+      trend: 'activités',
+    },
+    {
+      title: 'Cette semaine',
+      value: '0h',
+      icon: Clock,
+      color: 'bg-green-500',
+      trend: 'planifiées',
+    },
+    {
+      title: 'Mes matières',
+      value: '0',
+      icon: BookOpen,
+      color: 'bg-purple-500',
+      trend: 'actives',
+    },
+    {
+      title: 'Objectifs',
+      value: '0/0',
+      icon: TrendingUp,
+      color: 'bg-orange-500',
+      trend: 'complétés',
+    },
+  ];
+
+  const stats = isTestUser ? emptyStats : (user.role === 'admin' ? adminStats : studentStats);
 
   return (
     <div className="space-y-6">
@@ -106,16 +144,16 @@ export default function Dashboard({ user }: DashboardProps) {
           {/* Zone principale - Informations critiques */}
           <div className="lg:col-span-8 space-y-6">
             {/* Prochain cours - PRIORITÉ 1 */}
-            <NextClass />
+            <NextClass events={isTestUser ? events : undefined} />
             
-            {/* Devoirs et Événements - PRIORITÉ 2 */}
+            {/* Événements et Devoirs - PRIORITÉ 2 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Assignments userRole={user.role} />
-              <UpcomingEvents userRole={user.role} />
+              <UpcomingEvents userRole={user.role} events={isTestUser ? events : undefined} />
+              <Assignments userRole={user.role} assignments={isTestUser ? assignments : undefined} />
             </div>
             
             {/* Activité récente - PRIORITÉ 3 */}
-            <RecentActivity userRole={user.role} />
+            <RecentActivity userRole={user.role} assignments={isTestUser ? assignments : undefined} events={isTestUser ? events : undefined} />
           </div>
 
           {/* Zone secondaire - Actions et infos supplémentaires */}
@@ -131,14 +169,14 @@ export default function Dashboard({ user }: DashboardProps) {
           
           {/* Zone principale - Vue d'ensemble et gestion */}
           <div className="lg:col-span-8 space-y-6">
-            {/* Tâches urgentes et événements - PRIORITÉ 1 */}
+            {/* Événements urgents et tâches - PRIORITÉ 1 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Assignments userRole={user.role} />
-              <UpcomingEvents userRole={user.role} />
+              <UpcomingEvents userRole={user.role} events={isTestUser ? events : undefined} />
+              <Assignments userRole={user.role} assignments={isTestUser ? assignments : undefined} />
             </div>
             
             {/* Activité récente - PRIORITÉ 2 */}
-            <RecentActivity userRole={user.role} />
+            <RecentActivity userRole={user.role} assignments={isTestUser ? assignments : undefined} events={isTestUser ? events : undefined} />
           </div>
 
           {/* Zone secondaire - Actions rapides et météo */}

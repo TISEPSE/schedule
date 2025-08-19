@@ -131,7 +131,7 @@ export class LocalStorage {
   }
 
   // Sync logging
-  static async logSync(tableName: string, recordId: string, action: 'create' | 'update' | 'delete', data?: any): Promise<void> {
+  static async logSync(tableName: string, recordId: string, action: 'create' | 'update' | 'delete', data?: object): Promise<void> {
     await db.syncLogs.add({
       tableName,
       recordId,
@@ -144,7 +144,7 @@ export class LocalStorage {
 
   // Get pending syncs
   static async getPendingSyncs(): Promise<SyncLog[]> {
-    return await db.syncLogs.where('synced').equals(false).toArray();
+    return await db.syncLogs.filter(log => !log.synced).toArray();
   }
 
   static async markSynced(syncLogId: number): Promise<void> {

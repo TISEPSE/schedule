@@ -4,6 +4,8 @@ import { useAuth } from '@/context/AuthContext';
 import { redirect } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
 import { useState } from 'react';
+import EmptyUserState from '@/components/EmptyState/EmptyUserState';
+import { useTestUser } from '@/hooks/useTestUser';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -15,7 +17,6 @@ import {
   PieChart,
   User,
   ChevronDown,
-  Star,
   MessageSquare
 } from 'lucide-react';
 
@@ -105,10 +106,13 @@ export default function BulletinPage() {
   const { user, logout } = useAuth();
   const [selectedYear, setSelectedYear] = useState(mockBulletinData.currentYear);
   const [selectedTrimester, setSelectedTrimester] = useState(mockBulletinData.currentTrimester);
+  const { isTestUser } = useTestUser(user);
 
   if (!user) {
     redirect('/');
   }
+
+  // Utilisateur test : interface normale mais données vides
 
   if (user.role === 'admin') {
     return (
@@ -130,11 +134,30 @@ export default function BulletinPage() {
     );
   }
 
+  const getDisplayData = () => {
+    if (isTestUser) {
+      return {
+        ...mockBulletinData,
+        subjects: [],
+        generalAverage: 0,
+        absences: { justified: 0, unjustified: 0, delays: 0 },
+        generalAppreciation: "",
+        student: { name: "", class: "", rank: "" }
+      };
+    }
+    return mockBulletinData;
+  };
+
+  const displayData = getDisplayData();
+
   const calculateWeightedAverage = () => {
-    const totalPoints = mockBulletinData.subjects.reduce((sum, subject) => 
+    if (isTestUser || displayData.subjects.length === 0) {
+      return '0.00';
+    }
+    const totalPoints = displayData.subjects.reduce((sum, subject) => 
       sum + (subject.average * subject.coefficient), 0
     );
-    const totalCoefficients = mockBulletinData.subjects.reduce((sum, subject) => 
+    const totalCoefficients = displayData.subjects.reduce((sum, subject) => 
       sum + subject.coefficient, 0
     );
     return (totalPoints / totalCoefficients).toFixed(2);
@@ -145,14 +168,17 @@ export default function BulletinPage() {
       <div className="space-y-6">
         
         {/* Header avec sélecteurs */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-6">
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Mon bulletin</h1>
-              <p className="text-gray-600">{mockBulletinData.student.name} - {mockBulletinData.student.class}</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Mon bulletin</h1>
+              {displayData.student.name && (
+                <p className="text-gray-600">{displayData.student.name} - {displayData.student.class}</p>
+              )}
             </div>
             
-            <div className="flex items-center space-x-4">
+            {!isTestUser && (
+              <div className="flex items-center space-x-4">
               {/* Sélecteur d'année */}
               <div className="relative">
                 <select 
@@ -160,7 +186,7 @@ export default function BulletinPage() {
                   onChange={(e) => setSelectedYear(e.target.value)}
                   className="appearance-none bg-blue-50 border border-blue-200 text-blue-700 py-3 px-4 pr-8 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {mockBulletinData.years.map(year => (
+                  {displayData.years.map(year => (
                     <option key={year} value={year}>{year}</option>
                   ))}
                 </select>
@@ -174,13 +200,14 @@ export default function BulletinPage() {
                   onChange={(e) => setSelectedTrimester(e.target.value)}
                   className="appearance-none bg-purple-50 border border-purple-200 text-purple-700 py-3 px-4 pr-8 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
-                  {mockBulletinData.trimesters.map(trimester => (
+                  {displayData.trimesters.map(trimester => (
                     <option key={trimester} value={trimester}>{trimester}</option>
                   ))}
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-600 pointer-events-none" />
               </div>
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -200,8 +227,8 @@ export default function BulletinPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100 font-medium">Classement</p>
-                <p className="text-3xl font-bold">3ème</p>
-                <p className="text-green-200 text-sm">sur 28 élèves</p>
+                <p className="text-3xl font-bold">{displayData.student.rank ? displayData.student.rank.split(' ')[0] : '-'}</p>
+                <p className="text-green-200 text-sm">{displayData.student.rank ? displayData.student.rank.split(' ').slice(1).join(' ') : 'sur - élèves'}</p>
               </div>
               <Award className="h-8 w-8 text-green-200" />
             </div>
@@ -211,7 +238,7 @@ export default function BulletinPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-100 font-medium">Matières</p>
-                <p className="text-3xl font-bold">{mockBulletinData.subjects.length}</p>
+                <p className="text-3xl font-bold">{displayData.subjects.length}</p>
                 <p className="text-orange-200 text-sm">évaluées</p>
               </div>
               <BookOpen className="h-8 w-8 text-orange-200" />
@@ -222,15 +249,24 @@ export default function BulletinPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 font-medium">Absences</p>
-                <p className="text-3xl font-bold">{mockBulletinData.absences.justified + mockBulletinData.absences.unjustified}</p>
-                <p className="text-purple-200 text-sm">{mockBulletinData.absences.delays} retard</p>
+                <p className="text-3xl font-bold">{displayData.absences.justified + displayData.absences.unjustified}</p>
+                <p className="text-purple-200 text-sm">{displayData.absences.delays} retard</p>
               </div>
               <Calendar className="h-8 w-8 text-purple-200" />
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Section principale avec état vide pour utilisateur test */}
+        {isTestUser ? (
+          <EmptyUserState 
+            user={user}
+            title="Bulletin scolaire vide"
+            description="Aucune donnée de bulletin n'est disponible pour cet utilisateur de test."
+            icon="book"
+          />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Notes par matière */}
           <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -240,7 +276,7 @@ export default function BulletinPage() {
             </div>
 
             <div className="space-y-4">
-              {mockBulletinData.subjects.map((subject) => (
+              {displayData.subjects.map((subject) => (
                 <div key={subject.id} className="p-4 bg-gray-50 rounded-xl">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
@@ -281,7 +317,7 @@ export default function BulletinPage() {
                   </div>
 
                   {/* Notes individuelles */}
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-between text-sm mb-3">
                     <div className="flex space-x-2">
                       {subject.notes.map((note, index) => (
                         <span key={index} className="px-2 py-1 bg-white rounded-lg font-medium text-gray-700">
@@ -291,6 +327,19 @@ export default function BulletinPage() {
                     </div>
                     <span className="text-gray-500">{subject.notes.length} notes</span>
                   </div>
+
+                  {/* Appréciation du professeur */}
+                  {subject.appreciation && (
+                    <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                      <div className="flex items-start space-x-2">
+                        <MessageSquare className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs font-medium text-blue-700 mb-1">{subject.teacher}</p>
+                          <p className="text-sm text-blue-800">{subject.appreciation}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -322,43 +371,50 @@ export default function BulletinPage() {
                 <h2 className="text-xl font-semibold text-gray-900">Appréciation générale</h2>
               </div>
               
-              <div className="p-4 bg-green-50 rounded-xl">
-                <div className="flex items-center space-x-2 mb-3">
-                  <User className="h-5 w-5 text-green-600" />
-                  <span className="font-medium text-green-700">Conseil de classe</span>
+              {displayData.generalAppreciation ? (
+                <div className="p-4 bg-green-50 rounded-xl">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <User className="h-5 w-5 text-green-600" />
+                    <span className="font-medium text-green-700">Conseil de classe</span>
+                  </div>
+                  <p className="text-green-800 leading-relaxed">
+                    {displayData.generalAppreciation}
+                  </p>
                 </div>
-                <p className="text-green-800 leading-relaxed">
-                  {mockBulletinData.generalAppreciation}
-                </p>
+              ) : (
+                <div className="p-4 bg-gray-50 rounded-xl text-center">
+                  <p className="text-gray-500">Aucune appréciation générale disponible</p>
+                </div>
+              )}
+            </div>
+
+            {/* Détail des absences */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center space-x-2 mb-4">
+                <Calendar className="h-6 w-6 text-purple-600" />
+                <h2 className="text-xl font-semibold text-gray-900">Détail des absences</h2>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                  <span className="text-red-700 font-medium">Absences justifiées</span>
+                  <span className="text-red-900 font-bold">{displayData.absences.justified}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                  <span className="text-orange-700 font-medium">Absences non justifiées</span>
+                  <span className="text-orange-900 font-bold">{displayData.absences.unjustified}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                  <span className="text-yellow-700 font-medium">Retards</span>
+                  <span className="text-yellow-900 font-bold">{displayData.absences.delays}</span>
+                </div>
               </div>
             </div>
 
           </div>
 
         </div>
-
-        {/* Appréciations par matière */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-2 mb-6">
-            <Star className="h-6 w-6 text-yellow-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Appréciations des professeurs</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {mockBulletinData.subjects.map((subject) => (
-              <div key={subject.id} className="p-4 border border-gray-200 rounded-xl">
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className={`w-3 h-3 ${subject.color} rounded-full`}></div>
-                  <h3 className="font-semibold text-gray-900">{subject.name}</h3>
-                  <span className="text-sm text-gray-500">• {subject.teacher}</span>
-                </div>
-                <p className="text-gray-700 text-sm leading-relaxed">
-                  {subject.appreciation}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
 
       </div>
     </MainLayout>

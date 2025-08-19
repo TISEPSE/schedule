@@ -4,7 +4,8 @@ import { useAuth } from '@/context/AuthContext';
 import { redirect } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
 import { useState } from 'react';
-import { Users, Mail, MapPin, Award, BookOpen, Clock, MessageCircle, GraduationCap, UserCog, Plus, Grid, Layout, FileText } from 'lucide-react';
+import { useTestUser } from '@/hooks/useTestUser';
+import { Users, Award, BookOpen, Clock, MessageCircle, GraduationCap, UserCog, Plus, Grid, Layout, FileText } from 'lucide-react';
 
 // Mock data pour la classe
 const mockClassmates = [
@@ -70,71 +71,6 @@ const mockClassmates = [
   }
 ];
 
-const mockTeachers = [
-  {
-    id: 'prof1',
-    name: 'Dr. Marie Leclerc',
-    email: 'marie.leclerc@school.edu',
-    avatar: 'ML',
-    subject: 'Mathématiques',
-    office: 'Salle 201',
-    color: 'bg-blue-600',
-    type: 'teacher'
-  },
-  {
-    id: 'prof2',
-    name: 'M. Pierre Durand',
-    email: 'pierre.durand@school.edu',
-    avatar: 'PD',
-    subject: 'Physique-Chimie',
-    office: 'Laboratoire A',
-    color: 'bg-green-600',
-    type: 'teacher'
-  },
-  {
-    id: 'prof3',
-    name: 'Mme. Claire Petit',
-    email: 'claire.petit@school.edu',
-    avatar: 'CP',
-    subject: 'Français',
-    office: 'Salle 105',
-    color: 'bg-purple-600',
-    type: 'teacher'
-  }
-];
-
-const mockStaff = [
-  {
-    id: 'staff1',
-    name: 'Mme. Sophie Moreau',
-    email: 'sophie.moreau@school.edu',
-    avatar: 'SM',
-    role: 'Secrétaire générale',
-    office: 'Bureau 001',
-    color: 'bg-orange-600',
-    type: 'staff'
-  },
-  {
-    id: 'staff2',
-    name: 'M. Jean Dubois',
-    email: 'jean.dubois@school.edu',
-    avatar: 'JD',
-    role: 'Conseiller pédagogique',
-    office: 'Bureau 102',
-    color: 'bg-teal-600',
-    type: 'staff'
-  },
-  {
-    id: 'staff3',
-    name: 'Mme. Anne Rousseau',
-    email: 'anne.rousseau@school.edu',
-    avatar: 'AR',
-    role: 'Infirmière scolaire',
-    office: 'Infirmerie',
-    color: 'bg-rose-600',
-    type: 'staff'
-  }
-];
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -157,10 +93,13 @@ const getStatusLabel = (status: string) => {
 export default function ClassesPage() {
   const { user, logout } = useAuth();
   const [viewMode, setViewMode] = useState<'list' | 'classroom'>('list');
+  const { isTestUser } = useTestUser(user);
 
   if (!user) {
     redirect('/');
   }
+
+  // Utilisateur test : interface normale mais données vides
 
   if (user.role === 'admin') {
     return (
@@ -184,7 +123,7 @@ export default function ClassesPage() {
     <MainLayout user={user} onLogout={logout}>
       <div className="space-y-6">
         {/* Actions rapides */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <h3 className="text-2xl font-bold text-gray-900 mb-4">Ma classe - BTS 1</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <button className="p-4 text-center rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors">
@@ -228,27 +167,10 @@ export default function ClassesPage() {
                   </button>
                 </div>
                 <div className="space-y-3">
-                  {mockTeachers.map((teacher) => (
-                    <div key={teacher.id} className="flex items-center space-x-3 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                      <div className={`w-12 h-12 ${teacher.color} rounded-full flex items-center justify-center text-white font-semibold`}>
-                        {teacher.avatar}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-gray-900 truncate">{teacher.name}</h4>
-                        <p className="text-sm text-gray-600 flex items-center space-x-1">
-                          <BookOpen className="h-4 w-4" />
-                          <span>{teacher.subject}</span>
-                        </p>
-                        <p className="text-xs text-gray-500 flex items-center space-x-1">
-                          <MapPin className="h-3 w-3" />
-                          <span>{teacher.office}</span>
-                        </p>
-                      </div>
-                      <button className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-white transition-colors">
-                        <Mail className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
+                  <div className="p-4 text-center text-gray-500 bg-gray-50 rounded-xl">
+                    <GraduationCap className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm">Aucun enseignant</p>
+                  </div>
                 </div>
               </div>
 
@@ -265,27 +187,10 @@ export default function ClassesPage() {
                   </button>
                 </div>
                 <div className="space-y-3">
-                  {mockStaff.map((staff) => (
-                    <div key={staff.id} className="flex items-center space-x-3 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                      <div className={`w-12 h-12 ${staff.color} rounded-full flex items-center justify-center text-white font-semibold`}>
-                        {staff.avatar}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-gray-900 truncate">{staff.name}</h4>
-                        <p className="text-sm text-gray-600 flex items-center space-x-1">
-                          <Users className="h-4 w-4" />
-                          <span>{staff.role}</span>
-                        </p>
-                        <p className="text-xs text-gray-500 flex items-center space-x-1">
-                          <MapPin className="h-3 w-3" />
-                          <span>{staff.office}</span>
-                        </p>
-                      </div>
-                      <button className="p-2 text-gray-400 hover:text-orange-600 rounded-lg hover:bg-white transition-colors">
-                        <Mail className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
+                  <div className="p-4 text-center text-gray-500 bg-gray-50 rounded-xl">
+                    <UserCog className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm">Aucun personnel</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -299,7 +204,7 @@ export default function ClassesPage() {
                 <h2 className="text-xl font-semibold text-gray-900">Camarades de classe</h2>
               </div>
               <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-500">{mockClassmates.length} étudiants</span>
+                <span className="text-sm text-gray-500">{isTestUser ? 0 : mockClassmates.length} étudiants</span>
                 
                 {/* Sélecteur de vue */}
                 <div className="flex items-center bg-gray-100 rounded-lg p-1">
@@ -336,7 +241,7 @@ export default function ClassesPage() {
 
             {viewMode === 'list' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {mockClassmates.map((classmate) => (
+                {(isTestUser ? [] : mockClassmates).map((classmate) => (
                   <div key={classmate.id} className="p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all">
                     <div className="flex items-start space-x-3">
                       <div className={`w-12 h-12 ${classmate.color} rounded-full flex items-center justify-center text-white font-semibold`}>
@@ -390,7 +295,7 @@ export default function ClassesPage() {
                 
                 {/* Disposition des bureaux (3 rangées de 2 colonnes) */}
                 <div className="grid grid-cols-2 gap-x-12 gap-y-6 max-w-md mx-auto">
-                  {mockClassmates.map((classmate) => (
+                  {(isTestUser ? [] : mockClassmates).map((classmate) => (
                     <div key={classmate.id} className="flex flex-col items-center">
                       {/* Bureau avec étudiant assis */}
                       <div className="w-16 h-12 bg-amber-100 border-2 border-amber-200 rounded-lg mb-2 relative">
@@ -418,26 +323,7 @@ export default function ClassesPage() {
               </div>
             )}
           </div>
-        </div>
 
-        {/* Statistiques de la classe */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-blue-50 rounded-2xl p-6 shadow-sm border border-blue-100 text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">{mockClassmates.length}</div>
-            <div className="text-base font-medium text-blue-700">Étudiants</div>
-          </div>
-          <div className="bg-purple-50 rounded-2xl p-6 shadow-sm border border-purple-100 text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-2">{mockTeachers.length + mockStaff.length}</div>
-            <div className="text-base font-medium text-purple-700">Membres de l&apos;équipe éducative</div>
-          </div>
-          <div className="bg-green-50 rounded-2xl p-6 shadow-sm border border-green-100 text-center">
-            <div className="text-3xl font-bold text-green-600 mb-2">{mockClassmates.filter(s => s.status === 'online').length}</div>
-            <div className="text-base font-medium text-green-700">En ligne</div>
-          </div>
-          <div className="bg-orange-50 rounded-2xl p-6 shadow-sm border border-orange-100 text-center">
-            <div className="text-3xl font-bold text-orange-600 mb-2">12</div>
-            <div className="text-base font-medium text-orange-700">Matières</div>
-          </div>
         </div>
 
       </div>

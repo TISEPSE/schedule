@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { redirect } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
 import { useState } from 'react';
+import { useTestUser } from '@/hooks/useTestUser';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -153,10 +154,13 @@ const typeIcons: Record<string, React.ComponentType<{className?: string}>> = {
 export default function PlanningPage() {
   const { user, logout } = useAuth();
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const { isTestUser } = useTestUser(user);
 
   if (!user) {
     redirect('/');
   }
+
+  // Utilisateur test : interface normale mais données vides (sera géré par le composant)
 
   if (user.role === 'admin') {
     return (
@@ -179,6 +183,10 @@ export default function PlanningPage() {
   }
 
   const getEventsForDay = (day: string) => {
+    // Utilisateur test : renvoyer liste vide
+    if (isTestUser) {
+      return [];
+    }
     return mockPlanningData.events.filter(event => 
       event.day === day && (selectedFilter === 'all' || event.type === selectedFilter)
     ).sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -206,7 +214,7 @@ export default function PlanningPage() {
       <div className="space-y-6">
         
         {/* Header avec navigation et filtres */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Mon planning</h1>

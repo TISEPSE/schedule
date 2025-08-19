@@ -11,8 +11,6 @@ import {
   BookOpen,
   Calendar,
   Trash2,
-  CheckCircle,
-  Clock,
   Wifi,
   WifiOff
 } from 'lucide-react';
@@ -25,7 +23,6 @@ export default function DataTestPanel({ userId }: DataTestPanelProps) {
   const {
     assignments,
     events,
-    loading,
     syncing,
     isOnline,
     lastSync,
@@ -163,7 +160,7 @@ export default function DataTestPanel({ userId }: DataTestPanelProps) {
             className="flex items-center justify-center space-x-1 text-sm bg-yellow-100 text-yellow-700 p-2 rounded hover:bg-yellow-200 col-span-2"
           >
             <Database className="h-3 w-3" />
-            <span>Charger données d'exemple</span>
+            <span>Charger données d&apos;exemple</span>
           </button>
         </div>
       </div>

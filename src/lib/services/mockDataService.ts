@@ -30,7 +30,7 @@ export class MockDataService {
   private static mockAssignments: Assignment[] = [
     {
       id: uuidv4(),
-      userId: '2', // Seulement Marie a des données
+      userId: '2', // Marie a des données (utilisateur test '4' reste vide)
       title: 'Exercices de Mathématiques',
       description: 'Chapitre 5 : Fonctions linéaires, exercices 1 à 15',
       subject: 'Mathématiques',
