@@ -132,7 +132,7 @@ const daysOfWeek = [
   { key: 'sunday', label: 'Dimanche', shortLabel: 'Dim' }
 ];
 
-const typeLabels = {
+const typeLabels: Record<string, string> = {
   course: 'Cours',
   practical: 'TP',
   exam: 'Contrôle',
@@ -141,7 +141,7 @@ const typeLabels = {
   study: 'Révision'
 };
 
-const typeIcons = {
+const typeIcons: Record<string, React.ComponentType<{className?: string}>> = {
   course: BookOpen,
   practical: AlertCircle,
   exam: AlertCircle,
@@ -189,7 +189,7 @@ export default function PlanningPage() {
   };
 
   const getDayDate = (dayKey: string) => {
-    const dates = {
+    const dates: Record<string, string> = {
       monday: '15',
       tuesday: '16', 
       wednesday: '17',

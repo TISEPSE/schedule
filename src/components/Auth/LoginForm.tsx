@@ -6,7 +6,7 @@ import { GraduationCap, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 interface LoginFormProps {
   onLogin: (email: string, password: string) => void;
   isLoading?: boolean;
-  error?: string;
+  error?: string | null;
 }
 
 export default function LoginForm({ onLogin, isLoading, error }: LoginFormProps) {

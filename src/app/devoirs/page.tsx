@@ -139,7 +139,7 @@ const daysOfWeek = [
   { key: 'sunday', label: 'Dimanche', shortLabel: 'Dim' }
 ];
 
-const typeLabels = {
+const typeLabels: Record<string, string> = {
   homework: 'Exercice',
   report: 'Rapport',
   essay: 'Rédaction',
@@ -149,7 +149,7 @@ const typeLabels = {
   reading: 'Lecture'
 };
 
-const typeIcons = {
+const typeIcons: Record<string, React.ComponentType<{className?: string}>> = {
   homework: BookOpen,
   report: BookOpen,
   essay: BookOpen,
