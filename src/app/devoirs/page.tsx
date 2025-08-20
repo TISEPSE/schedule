@@ -4,180 +4,36 @@ import { useAuth } from '@/context/AuthContext';
 import { redirect } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
 import { useState } from 'react';
-import { useTestUser } from '@/hooks/useTestUser';
+import { useApiData } from '@/hooks/useApiData';
 import { 
-  ChevronLeft, 
-  ChevronRight, 
   Plus, 
   Edit, 
   Trash2, 
   Clock,
-  User,
   BookOpen,
-  AlertCircle,
-  Calendar,
-  Filter,
-  CheckCircle,
-  Circle,
-  Star,
-  TrendingUp,
-  CalendarDays,
   Search,
-  SortAsc,
-  Archive
+  MoreVertical
 } from 'lucide-react';
+import { getSubjectColors } from '@/lib/colors';
+import CreateAssignmentModal from '@/components/Devoirs/CreateAssignmentModal';
 
-// Mock data pour les devoirs - structure améliorée
-const mockDevoirsData = {
-  currentWeek: "Semaine du 15 au 21 Janvier 2024",
-  devoirs: [
-    {
-      id: '1',
-      title: 'Exercices Mathématiques - Chapitre 5',
-      subject: 'Mathématiques',
-      type: 'homework',
-      dueDate: '2024-01-15',
-      dueTime: '08:00',
-      teacher: 'M. Durand',
-      description: 'Exercices 1 à 15 page 87',
-      completed: false,
-      priority: 'medium',
-      estimatedTime: 60,
-      createdDate: '2024-01-10'
-    },
-    {
-      id: '2',
-      title: 'Rapport de TP Physique',
-      subject: 'Physique-Chimie',
-      type: 'report',
-      dueDate: '2024-01-16',
-      dueTime: '10:00',
-      teacher: 'Mme. Martin',
-      description: 'Compte-rendu du TP optique',
-      completed: true,
-      priority: 'high',
-      estimatedTime: 120,
-      createdDate: '2024-01-08'
-    },
-    {
-      id: '3',
-      title: 'Dissertation Français',
-      subject: 'Français',
-      type: 'essay',
-      dueDate: '2024-01-16',
-      dueTime: '08:00',
-      teacher: 'M. Petit',
-      description: 'Sujet : "Le romantisme dans la littérature"',
-      completed: false,
-      priority: 'high',
-      estimatedTime: 180,
-      createdDate: '2024-01-05'
-    },
-    {
-      id: '4',
-      title: 'Révisions pour Contrôle Maths',
-      subject: 'Mathématiques',
-      type: 'study',
-      dueDate: '2024-01-16',
-      dueTime: '14:00',
-      teacher: 'M. Durand',
-      description: 'Préparer le contrôle sur les fonctions',
-      completed: false,
-      priority: 'high',
-      estimatedTime: 90,
-      createdDate: '2024-01-12'
-    },
-    {
-      id: '5',
-      title: 'Présentation Anglais',
-      subject: 'Anglais',
-      type: 'presentation',
-      dueDate: '2024-01-17',
-      dueTime: '09:00',
-      teacher: 'Mme. Smith',
-      description: 'Présentation de 5 min sur un pays anglophone',
-      completed: true,
-      priority: 'medium',
-      estimatedTime: 45,
-      createdDate: '2024-01-09'
-    },
-    {
-      id: '6',
-      title: 'Recherches Économie',
-      subject: 'Économie',
-      type: 'research',
-      dueDate: '2024-01-18',
-      dueTime: '15:00',
-      teacher: 'Mme. Dubois',
-      description: 'Rechercher 3 articles sur l\'inflation',
-      completed: false,
-      priority: 'low',
-      estimatedTime: 30,
-      createdDate: '2024-01-13'
-    },
-    {
-      id: '7',
-      title: 'Exercices Histoire',
-      subject: 'Histoire-Géographie',
-      type: 'homework',
-      dueDate: '2024-01-19',
-      dueTime: '08:00',
-      teacher: 'M. Moreau',
-      description: 'Questions chapitre Première Guerre mondiale',
-      completed: false,
-      priority: 'low',
-      estimatedTime: 40,
-      createdDate: '2024-01-14'
-    },
-    {
-      id: '8',
-      title: 'Fiche de lecture',
-      subject: 'Français',
-      type: 'reading',
-      dueDate: '2024-01-19',
-      dueTime: '14:00',
-      teacher: 'M. Petit',
-      description: 'Fiche de lecture "Le Rouge et le Noir"',
-      completed: false,
-      priority: 'medium',
-      estimatedTime: 75,
-      createdDate: '2024-01-11'
-    }
-  ]
-};
-
-const typeLabels: Record<string, string> = {
-  homework: 'Exercices',
-  report: 'Rapport',
-  essay: 'Rédaction',
-  study: 'Révisions',
-  presentation: 'Exposé',
-  research: 'Recherches',
-  reading: 'Lecture'
-};
-
-const typeIcons: Record<string, React.ComponentType<{className?: string}>> = {
-  homework: BookOpen,
-  report: BookOpen,
-  essay: BookOpen,
-  study: AlertCircle,
-  presentation: User,
-  research: BookOpen,
-  reading: BookOpen
-};
-
-const priorityConfig = {
-  high: { label: 'Urgente', color: 'bg-red-100 text-red-700 border-red-200', icon: '🔥' },
-  medium: { label: 'Normale', color: 'bg-yellow-100 text-yellow-700 border-yellow-200', icon: '⚡' },
-  low: { label: 'Faible', color: 'bg-green-100 text-green-700 border-green-200', icon: '🌿' }
-};
+interface Assignment {
+  id: string;
+  title: string;
+  description: string;
+  subject: string;
+  dueDate: Date;
+  priority: string;
+  completed: boolean;
+  status?: string;
+}
 
 export default function DevoirsPage() {
   const { user, logout } = useAuth();
-  const [selectedFilter, setSelectedFilter] = useState('pending');
-  const [selectedView, setSelectedView] = useState('priority'); // 'priority', 'date', 'subject'
+  const { assignments, updateAssignment, createAssignment } = useApiData(user?.id || '');
   const [searchTerm, setSearchTerm] = useState('');
-  const { isTestUser } = useTestUser(user);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [draggedItem, setDraggedItem] = useState<Assignment | null>(null);
 
   if (!user) {
     redirect('/');
@@ -187,7 +43,7 @@ export default function DevoirsPage() {
     return (
       <MainLayout user={user} onLogout={logout}>
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-2 duration-400 ease-out delay-100 motion-reduce:animate-none">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Gestion des devoirs</h1>
             <div className="bg-gray-50 rounded-xl p-8 text-center">
               <p className="text-gray-600">
@@ -203,371 +59,542 @@ export default function DevoirsPage() {
     );
   }
 
-  // Fonction pour filtrer et trier les devoirs
-  const getFilteredDevoirs = () => {
-    let filtered = isTestUser ? [] : mockDevoirsData.devoirs;
-
-    // Filtrage par statut
-    if (selectedFilter === 'pending') {
-      filtered = filtered.filter(d => !d.completed);
-    } else if (selectedFilter === 'completed') {
-      filtered = filtered.filter(d => d.completed);
-    } else if (selectedFilter === 'urgent') {
-      const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      filtered = filtered.filter(d => {
-        const dueDate = new Date(d.dueDate);
-        return !d.completed && dueDate <= tomorrow;
-      });
-    }
+  // Fonction pour filtrer les devoirs
+  const getFilteredAssignments = () => {
+    let filtered = assignments;
 
     // Recherche
     if (searchTerm) {
-      filtered = filtered.filter(d => 
-        d.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        d.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        d.teacher.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(a => 
+        a.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        a.subject.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    }
-
-    // Tri selon la vue
-    if (selectedView === 'priority') {
-      const priorityOrder = { high: 0, medium: 1, low: 2 };
-      filtered.sort((a, b) => {
-        if (a.completed !== b.completed) return a.completed ? 1 : -1;
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
-      });
-    } else if (selectedView === 'date') {
-      filtered.sort((a, b) => {
-        if (a.completed !== b.completed) return a.completed ? 1 : -1;
-        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-      });
-    } else if (selectedView === 'subject') {
-      filtered.sort((a, b) => {
-        if (a.completed !== b.completed) return a.completed ? 1 : -1;
-        return a.subject.localeCompare(b.subject);
-      });
     }
 
     return filtered;
   };
 
-  const filteredDevoirs = getFilteredDevoirs();
+  const filteredAssignments = getFilteredAssignments();
 
-  // Groupement par priorité pour l'affichage
-  const devoirsByPriority = {
-    high: filteredDevoirs.filter(d => d.priority === 'high' && !d.completed),
-    medium: filteredDevoirs.filter(d => d.priority === 'medium' && !d.completed),
-    low: filteredDevoirs.filter(d => d.priority === 'low' && !d.completed),
-    completed: filteredDevoirs.filter(d => d.completed)
+
+  function isInProgress(assignment: { dueDate: Date; priority: string; status?: string }) {
+    const now = new Date();
+    const dueDate = new Date(assignment.dueDate);
+    const daysDiff = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return assignment.status === 'in-progress' || (daysDiff <= 3 && daysDiff > 1 && assignment.priority !== 'low');
+  }
+
+  // Groupement pour le kanban board avec design cohérent et backgrounds complets
+  const kanbanColumns = {
+    todo: {
+      title: '📝 À faire',
+      items: filteredAssignments.filter(a => !a.completed && !isInProgress(a)),
+      lightBg: 'bg-blue-100/80',
+      headerBg: 'bg-blue-500/90',
+      border: 'border-blue-200/40',
+      textColor: 'text-blue-700',
+      headerText: 'text-white',
+      accent: 'bg-blue-500',
+    },
+    inProgress: {
+      title: 'En cours',
+      items: filteredAssignments.filter(a => !a.completed && isInProgress(a)),
+      lightBg: 'bg-amber-100/80',
+      headerBg: 'bg-amber-500/90',
+      border: 'border-amber-200/40',
+      textColor: 'text-amber-700',
+      headerText: 'text-white',
+      accent: 'bg-amber-500',
+    },
+    review: {
+      title: 'À vérifier',
+      items: filteredAssignments.filter(a => !a.completed && a.status === 'review'),
+      lightBg: 'bg-purple-100/80',
+      headerBg: 'bg-purple-500/90',
+      border: 'border-purple-200/40',
+      textColor: 'text-purple-700',
+      headerText: 'text-white',
+      accent: 'bg-purple-500',
+    },
+    completed: {
+      title: 'Terminé',
+      items: filteredAssignments.filter(a => a.completed),
+      lightBg: 'bg-emerald-100/80',
+      headerBg: 'bg-emerald-500/90',
+      border: 'border-emerald-200/40',
+      textColor: 'text-emerald-700',
+      headerText: 'text-white',
+      accent: 'bg-emerald-500',
+    }
   };
 
-  const formatDueDate = (dueDate: string, dueTime: string) => {
-    const date = new Date(dueDate);
+  // Fonction pour créer un devoir
+  const handleCreateAssignment = async (formData: {
+    title: string;
+    description: string;
+    subject: string;
+    dueDate: Date;
+    priority: string;
+  }) => {
+    await createAssignment({
+      title: formData.title,
+      description: formData.description,
+      subject: formData.subject,
+      dueDate: formData.dueDate,
+      priority: formData.priority,
+      completed: false
+    });
+  };
+
+  const handleEditAssignment = (assignment: Assignment) => {
+    console.log('Édition du devoir:', assignment.id);
+    // TODO: Implémenter le modal d'édition
+  };
+
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce devoir ?')) {
+      // TODO: Implémenter la suppression via l'API
+      console.log('Suppression du devoir:', assignmentId);
+    }
+  };
+
+  const toggleCompletion = async (assignmentId: string) => {
+    const assignment = assignments.find(a => a.id === assignmentId);
+    if (assignment) {
+      await updateAssignment({
+        ...assignment,
+        completed: !assignment.completed
+      });
+    }
+  };
+
+  // Fonctions pour le drag & drop
+  const handleDragStart = (assignment: Assignment) => {
+    setDraggedItem(assignment);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+  };
+
+  const handleDrop = async (targetColumn: string) => {
+    if (!draggedItem) return;
+
+    let newStatus = '';
+    let completed = false;
+
+    // Déterminer le nouveau statut en fonction de la colonne
+    switch (targetColumn) {
+      case 'todo':
+        newStatus = 'pending';
+        break;
+      case 'inProgress':
+        newStatus = 'in-progress';
+        break;
+      case 'review':
+        newStatus = 'review';
+        break;
+      case 'completed':
+        completed = true;
+        newStatus = 'completed';
+        break;
+      default:
+        return;
+    }
+
+    // Mettre à jour le devoir
+    await updateAssignment({
+      ...draggedItem,
+      status: newStatus,
+      completed: completed
+    });
+
+    setDraggedItem(null);
+  };
+
+  const formatDueDate = (dueDate: Date) => {
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     
-    if (date.toDateString() === today.toDateString()) {
-      return `Aujourd'hui à ${dueTime}`;
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return `Demain à ${dueTime}`;
+    if (dueDate.toDateString() === today.toDateString()) {
+      return "Aujourd'hui";
+    } else if (dueDate.toDateString() === tomorrow.toDateString()) {
+      return 'Demain';
     } else {
-      return `${date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} à ${dueTime}`;
+      const daysDiff = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysDiff > 0 && daysDiff <= 7) {
+        return `Dans ${daysDiff} jours`;
+      } else {
+        return dueDate.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+      }
     }
   };
 
-  const toggleCompletion = (devoirId: string) => {
-    // Implementation would update the devoir completion status
-    console.log('Toggle completion for:', devoirId);
-  };
-
-  const getTotalEstimatedTime = () => {
-    return filteredDevoirs
-      .filter(d => !d.completed)
-      .reduce((total, d) => total + d.estimatedTime, 0);
-  };
 
   return (
     <MainLayout user={user} onLogout={logout}>
-      <div className="space-y-6">
+      <div className="space-y-8 min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 -m-6 p-6">
         
         {/* Header avec statistiques */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-white/50 page-animate-delay-1">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Mes devoirs</h1>
-              <p className="text-gray-600">Gérez et organisez vos travaux à rendre</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Kanban Board</h1>
+              <p className="text-gray-600">Organisez vos travaux avec un tableau kanban</p>
             </div>
             
-            <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors">
-              <Plus className="h-4 w-4" />
-              <span>Ajouter</span>
-            </button>
-          </div>
-
-
-          {/* Contrôles et filtres */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
             <div className="flex items-center space-x-4">
-              {/* Recherche */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Rechercher un devoir..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
               
-              {/* Vue */}
-              <div className="flex items-center space-x-2">
-                <SortAsc className="h-4 w-4 text-gray-500" />
-                <select 
-                  value={selectedView}
-                  onChange={(e) => setSelectedView(e.target.value)}
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="priority">Par priorité</option>
-                  <option value="date">Par date</option>
-                  <option value="subject">Par matière</option>
-                </select>
-              </div>
+              <button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Ajouter un devoir</span>
+              </button>
             </div>
+          </div>
 
-            {/* Filtres */}
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-500" />
-              <div className="flex space-x-2">
-                <button 
-                  onClick={() => setSelectedFilter('pending')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    selectedFilter === 'pending' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  En cours
-                </button>
-                <button 
-                  onClick={() => setSelectedFilter('urgent')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    selectedFilter === 'urgent' ? 'bg-red-100 text-red-700' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Urgents
-                </button>
-                <button 
-                  onClick={() => setSelectedFilter('completed')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    selectedFilter === 'completed' ? 'bg-green-100 text-green-700' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Terminés
-                </button>
-                <button 
-                  onClick={() => setSelectedFilter('all')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    selectedFilter === 'all' ? 'bg-gray-100 text-gray-700' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Tous
-                </button>
-              </div>
-            </div>
+          {/* Recherche */}
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Rechercher un devoir..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
           </div>
         </div>
 
-        {/* Liste des devoirs */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-          {filteredDevoirs.length === 0 ? (
-            <div className="p-12 text-center">
-              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <BookOpen className="h-10 w-10 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {isTestUser ? "Aucun devoir pour le moment" : "Aucun devoir trouvé"}
-              </h3>
-              <p className="text-gray-600 mb-4">
-                {isTestUser 
-                  ? "Vos devoirs apparaîtront ici une fois qu'ils seront ajoutés."
-                  : searchTerm 
-                    ? "Aucun devoir ne correspond à votre recherche."
-                    : "Tous vos devoirs sont terminés pour ce filtre !"
-                }
-              </p>
-              {!isTestUser && (
-                <button className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
-                  <Plus className="h-4 w-4" />
-                  <span>Ajouter un devoir</span>
-                </button>
-              )}
+        {/* Kanban Board */}
+        {filteredAssignments.length === 0 ? (
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-lg border border-white/50 text-center">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <BookOpen className="h-10 w-10 text-gray-400" />
             </div>
-          ) : (
-            <div className="divide-y divide-gray-100">
-              {selectedView === 'priority' && selectedFilter === 'pending' ? (
-                // Vue par priorité avec groupement
-                <>
-                  {devoirsByPriority.high.length > 0 && (
-                    <div className="p-6">
-                      <div className="flex items-center space-x-2 mb-4">
-                        <span className="text-lg">🔥</span>
-                        <h3 className="text-lg font-semibold text-red-700">Priorité Urgente</h3>
-                        <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium">
-                          {devoirsByPriority.high.length}
-                        </span>
-                      </div>
-                      <div className="space-y-3">
-                        {devoirsByPriority.high.map((devoir) => (
-                          <DevoirCard key={devoir.id} devoir={devoir} onToggleCompletion={toggleCompletion} formatDueDate={formatDueDate} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {devoirsByPriority.medium.length > 0 && (
-                    <div className="p-6">
-                      <div className="flex items-center space-x-2 mb-4">
-                        <span className="text-lg">⚡</span>
-                        <h3 className="text-lg font-semibold text-yellow-700">Priorité Normale</h3>
-                        <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs font-medium">
-                          {devoirsByPriority.medium.length}
-                        </span>
-                      </div>
-                      <div className="space-y-3">
-                        {devoirsByPriority.medium.map((devoir) => (
-                          <DevoirCard key={devoir.id} devoir={devoir} onToggleCompletion={toggleCompletion} formatDueDate={formatDueDate} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {devoirsByPriority.low.length > 0 && (
-                    <div className="p-6">
-                      <div className="flex items-center space-x-2 mb-4">
-                        <span className="text-lg">🌿</span>
-                        <h3 className="text-lg font-semibold text-green-700">Priorité Faible</h3>
-                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
-                          {devoirsByPriority.low.length}
-                        </span>
-                      </div>
-                      <div className="space-y-3">
-                        {devoirsByPriority.low.map((devoir) => (
-                          <DevoirCard key={devoir.id} devoir={devoir} onToggleCompletion={toggleCompletion} formatDueDate={formatDueDate} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                // Vue liste simple
-                <div className="p-6">
-                  <div className="space-y-3">
-                    {filteredDevoirs.map((devoir) => (
-                      <DevoirCard key={devoir.id} devoir={devoir} onToggleCompletion={toggleCompletion} formatDueDate={formatDueDate} />
-                    ))}
-                  </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              {searchTerm ? "Aucun devoir trouvé" : "Aucun devoir pour le moment"}
+            </h3>
+            <p className="text-gray-600 mb-4">
+              {searchTerm 
+                ? "Aucun devoir ne correspond à votre recherche."
+                : "Vos devoirs apparaîtront ici une fois qu'ils seront ajoutés."
+              }
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 xl:gap-8 page-animate-delay-2">
+              {Object.entries(kanbanColumns).map(([columnId, column]) => (
+                <div key={columnId}>
+                <KanbanColumn 
+                  columnId={columnId}
+                  title={column.title}
+                  items={column.items}
+                  lightBg={column.lightBg}
+                  headerBg={column.headerBg}
+                  border={column.border}
+                  textColor={column.textColor}
+                  headerText={column.headerText}
+                  accent={column.accent}
+                  description={column.description}
+                  onToggleCompletion={toggleCompletion}
+                  onEditAssignment={handleEditAssignment}
+                  onDeleteAssignment={handleDeleteAssignment}
+                  formatDueDate={formatDueDate}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  onDrop={handleDrop}
+                  draggedItem={draggedItem}
+                />
                 </div>
-              )}
-            </div>
-          )}
-        </div>
+              ))}
+          </div>
+        )}
+        
+        {/* Modal de création de devoir */}
+        <CreateAssignmentModal 
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSubmit={handleCreateAssignment}
+        />
       </div>
     </MainLayout>
   );
 }
 
-// Composant pour les cartes de devoirs
-function DevoirCard({ devoir, onToggleCompletion, formatDueDate }: any) {
-  const IconComponent = typeIcons[devoir.type];
-  const priorityInfo = priorityConfig[devoir.priority];
-  
+// Composant colonne Kanban avec design cohérent et backgrounds complets
+function KanbanColumn({ 
+  columnId, 
+  title, 
+  items, 
+  lightBg,
+  headerBg,
+  border,
+  textColor, 
+  onToggleCompletion, 
+  onEditAssignment, 
+  onDeleteAssignment, 
+  formatDueDate, 
+  onDragStart, 
+  onDragEnd, 
+  onDrop, 
+  draggedItem 
+}: {
+  columnId: string;
+  title: string;
+  items: Assignment[];
+  lightBg: string;
+  headerBg: string;
+  border: string;
+  textColor: string;
+  headerText: string;
+  accent: string;
+  description: string;
+  onToggleCompletion: (id: string) => void;
+  onEditAssignment: (assignment: Assignment) => void;
+  onDeleteAssignment: (id: string) => void;
+  formatDueDate: (date: Date) => string;
+  onDragStart: (assignment: Assignment) => void;
+  onDragEnd: () => void;
+  onDrop: (targetColumn: string) => void;
+  draggedItem: Assignment | null;
+}) {
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (draggedItem) {
+      setIsDragOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    onDrop(columnId);
+  };
+
   return (
-    <div className={`group relative bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all duration-200 ${
-      devoir.completed ? 'opacity-75' : ''
-    }`}>
-      <div className="flex items-start space-x-4">
-        {/* Checkbox de completion */}
-        <button
-          onClick={() => onToggleCompletion(devoir.id)}
-          className="flex-shrink-0 mt-1 hover:scale-110 transition-transform"
-        >
-          {devoir.completed ? (
-            <CheckCircle className="h-6 w-6 text-green-600" />
-          ) : (
-            <Circle className="h-6 w-6 text-gray-400 hover:text-green-500" />
-          )}
-        </button>
-        
-        {/* Contenu principal */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex-1">
-              <h3 className={`font-semibold text-gray-900 mb-1 ${
-                devoir.completed ? 'line-through text-gray-500' : ''
-              }`}>
-                {devoir.title}
-              </h3>
-              
-              <div className="flex items-center space-x-4 text-sm text-gray-700 mb-2">
-                <div className="flex items-center space-x-1">
-                  <BookOpen className="h-4 w-4" />
-                  <span className="font-medium">{devoir.subject}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <User className="h-4 w-4" />
-                  <span>{devoir.teacher}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <IconComponent className="h-4 w-4" />
-                  <span>{typeLabels[devoir.type]}</span>
-                </div>
-              </div>
-              
-              {devoir.description && (
-                <p className="text-sm text-gray-700 mb-3">{devoir.description}</p>
-              )}
-            </div>
-            
-            {/* Actions */}
-            <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button 
-                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                title="Modifier"
-              >
-                <Edit className="h-4 w-4" />
-              </button>
-              <button 
-                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                title="Supprimer"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-          
-          {/* Footer avec échéance et priorité */}
+    <div 
+      className={`${lightBg} backdrop-blur-sm rounded-2xl border ${border} shadow-sm transition-all duration-300 min-h-[600px] ${
+        isDragOver 
+          ? 'scale-[1.02] shadow-xl ring-2 ring-white/50' 
+          : 'hover:shadow-md'
+      }`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* En-tête avec design cohérent */}
+      <div className={`${headerBg} rounded-t-2xl p-5 text-white relative overflow-hidden`}>
+        <div className="relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-1 text-sm text-gray-700">
-                <Clock className="h-4 w-4" />
-                <span className="font-medium">{formatDueDate(devoir.dueDate, devoir.dueTime)}</span>
-              </div>
-              
-              {devoir.estimatedTime && (
-                <div className="flex items-center space-x-1 text-sm text-gray-700">
-                  <TrendingUp className="h-4 w-4" />
-                  <span>{devoir.estimatedTime}min</span>
+              <h3 className="font-bold text-xl">{title}</h3>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-bold">
+              {items.length}
+            </div>
+          </div>
+        </div>
+        
+      </div>
+      
+      {/* Corps de la colonne avec background coloré */}
+      <div className="p-4 min-h-[520px]">
+        <div className="space-y-3">
+          {items.map((assignment) => (
+            <AssignmentCard 
+              key={assignment.id}
+              assignment={assignment}
+              onToggleCompletion={onToggleCompletion}
+              onEditAssignment={onEditAssignment}
+              onDeleteAssignment={onDeleteAssignment}
+              formatDueDate={formatDueDate}
+              onDragStart={onDragStart}
+              onDragEnd={onDragEnd}
+              isDragging={draggedItem?.id === assignment.id}
+            />
+          ))}
+        </div>
+        
+        {isDragOver && (
+          <div className="border-2 border-dashed border-white/40 bg-white/30 rounded-2xl p-6 mt-4 text-center transition-all duration-200">
+            <div className={`${textColor} text-lg font-semibold mb-1`}>
+              Déposer ici
+            </div>
+            <div className={`${textColor} opacity-80 text-sm`}>
+              pour déplacer vers "{title}"
+            </div>
+          </div>
+        )}
+        
+        {items.length === 0 && !isDragOver && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-white/50 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-white/30">
+              <span className="text-2xl opacity-60">📋</span>
+            </div>
+            <p className={`${textColor} text-sm font-medium opacity-80`}>
+              Aucun devoir dans cette catégorie
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Composant carte de devoir modernisé avec couleurs par matière
+function AssignmentCard({ 
+  assignment, 
+  onToggleCompletion, 
+  onEditAssignment, 
+  onDeleteAssignment, 
+  formatDueDate, 
+  onDragStart, 
+  onDragEnd, 
+  isDragging 
+}: {
+  assignment: Assignment;
+  onToggleCompletion: (id: string) => void;
+  onEditAssignment: (assignment: Assignment) => void;
+  onDeleteAssignment: (id: string) => void;
+  formatDueDate: (date: Date) => string;
+  onDragStart: (assignment: Assignment) => void;
+  onDragEnd: () => void;
+  isDragging: boolean;
+}) {
+  // Utilise les couleurs par matière au lieu de la priorité
+  const subjectColors = getSubjectColors(assignment.subject);
+  const [showMenu, setShowMenu] = useState(false);
+  
+  const isUrgent = () => {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return new Date(assignment.dueDate) <= tomorrow;
+  };
+
+  const handleDragStart = (e: React.DragEvent) => {
+    onDragStart(assignment);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  
+  return (
+    <div 
+      className={`bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 cursor-move group relative overflow-hidden border border-white/40 ${
+        assignment.completed ? 'opacity-75' : ''
+      } ${isDragging ? 'opacity-50 scale-95 rotate-2 shadow-xl' : ''}`}
+      draggable={true}
+      onDragStart={handleDragStart}
+      onDragEnd={onDragEnd}
+    >
+      
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1">
+          <div className="flex items-center space-x-3 mb-3">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleCompletion(assignment.id);
+              }}
+              className="flex-shrink-0 hover:scale-110 transition-transform"
+            >
+              {assignment.completed ? (
+                <div className="h-6 w-6 bg-emerald-600 rounded-full flex items-center justify-center shadow-sm">
+                  <svg className="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
                 </div>
+              ) : (
+                <div className="h-6 w-6 border-2 border-gray-300 rounded-full hover:border-emerald-500 transition-colors"></div>
               )}
+            </button>
+            
+            <h4 className={`font-bold text-gray-900 line-clamp-2 ${
+              assignment.completed ? 'line-through text-gray-500' : ''
+            }`}>
+              {assignment.title}
+            </h4>
+          </div>
+          
+          {/* Badge de matière */}
+          <div className="flex items-center space-x-2 mb-3">
+            <div className={`flex items-center space-x-2 ${subjectColors.backgroundLight} px-3 py-1.5 rounded-full`}>
+              <BookOpen className={`h-3 w-3 ${subjectColors.text}`} />
+              <span className={`text-xs font-semibold ${subjectColors.text}`}>
+                {assignment.subject}
+              </span>
             </div>
             
-            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${priorityInfo.color}`}>
-              <span className="mr-1">{priorityInfo.icon}</span>
-              {priorityInfo.label}
-            </span>
           </div>
+          
+          {assignment.description && (
+            <p className="text-gray-600 text-sm line-clamp-2 mb-3 leading-relaxed">
+              {assignment.description}
+            </p>
+          )}
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Clock className="h-4 w-4 text-gray-400" />
+              <span className={`text-sm font-medium ${
+                isUrgent() && !assignment.completed 
+                  ? 'text-red-600 font-bold' 
+                  : 'text-gray-700'
+              }`}>
+                {formatDueDate(assignment.dueDate)}
+              </span>
+              {isUrgent() && !assignment.completed && (
+                <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-xs font-bold">
+                  Urgent
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        <div className="relative ml-2">
+          <button 
+            onClick={() => setShowMenu(!showMenu)}
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <MoreVertical className="h-4 w-4 text-gray-400" />
+          </button>
+          
+          {showMenu && (
+            <div className="absolute right-0 mt-1 w-36 bg-white/95 backdrop-blur-sm border border-white/40 rounded-xl shadow-lg z-20 overflow-hidden">
+              <button
+                onClick={() => {
+                  onEditAssignment(assignment);
+                  setShowMenu(false);
+                }}
+                className="flex items-center space-x-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50/80 transition-colors"
+              >
+                <Edit className="h-4 w-4" />
+                <span>Modifier</span>
+              </button>
+              <div className="border-t border-gray-100/60"></div>
+              <button
+                onClick={() => {
+                  onDeleteAssignment(assignment.id);
+                  setShowMenu(false);
+                }}
+                className="flex items-center space-x-3 w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50/80 transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Supprimer</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

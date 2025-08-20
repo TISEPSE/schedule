@@ -1,6 +1,7 @@
 import { FileText, AlertTriangle } from 'lucide-react';
 import { UserRole } from '@/types';
 import { Assignment } from '@/lib/database/local';
+import { getPriorityColors } from '@/lib/colors';
 
 interface AssignmentsProps {
   userRole: UserRole;
@@ -16,21 +17,21 @@ export default function Assignments({ userRole, assignments }: AssignmentsProps)
         subject: 'Personnel',
         dueDate: 'Demain',
         priority: 'high',
-        color: 'border-l-red-500',
+        color: getPriorityColors('high').borderLight,
       },
       {
         title: 'Projet de groupe',
         subject: 'Collaboration', 
         dueDate: 'Vendredi',
         priority: 'medium',
-        color: 'border-l-orange-500',
+        color: getPriorityColors('medium').borderLight,
       },
       {
         title: 'Lecture chapitre 5',
         subject: 'Personnel',
         dueDate: 'Lundi prochain',
         priority: 'low',
-        color: 'border-l-green-500',
+        color: getPriorityColors('low').borderLight,
       },
     ];
 
@@ -40,21 +41,21 @@ export default function Assignments({ userRole, assignments }: AssignmentsProps)
         subject: 'Administration',
         dueDate: 'Aujourd\'hui',
         priority: 'high',
-        color: 'border-l-red-500',
+        color: getPriorityColors('high').borderLight,
       },
       {
         title: 'Mise à jour système',
         subject: 'Technique',
         dueDate: 'Cette semaine',
         priority: 'medium',
-        color: 'border-l-orange-500',
+        color: getPriorityColors('medium').borderLight,
       },
       {
         title: 'Rapport d\'activité',
         subject: 'Administratif',
         dueDate: 'Fin du mois',
         priority: 'low',
-        color: 'border-l-green-500',
+        color: getPriorityColors('low').borderLight,
       },
     ];
 
@@ -96,14 +97,9 @@ export default function Assignments({ userRole, assignments }: AssignmentsProps)
     );
   }
 
-  // Pour l'utilisateur test : utiliser les vraies données
+  // Pour l'utilisateur test : utiliser les vraies données avec les couleurs cohérentes
   const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'border-l-red-500';
-      case 'medium': return 'border-l-orange-500';
-      case 'low': return 'border-l-green-500';
-      default: return 'border-l-gray-500';
-    }
+    return getPriorityColors(priority).borderLight;
   };
   
   const formatDueDate = (dueDate: Date) => {

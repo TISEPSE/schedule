@@ -10,7 +10,7 @@ export async function GET() {
     } else {
       return NextResponse.json({ status: 'unhealthy' }, { status: 503 });
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { status: 'error', message: 'Database connection failed' },
       { status: 503 }

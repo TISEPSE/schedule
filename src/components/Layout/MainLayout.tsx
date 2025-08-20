@@ -54,7 +54,7 @@ export default function MainLayout({ user, children, onLogout }: MainLayoutProps
         </div>
         
         {/* Main content avec padding-top pour compenser le header fixe */}
-        <main className="flex-1 p-6 overflow-y-auto" style={{ paddingTop: '7rem' }}>
+        <main className="flex-1 p-6 overflow-y-auto page-animate" style={{ paddingTop: '7rem' }}>
           {children}
         </main>
         

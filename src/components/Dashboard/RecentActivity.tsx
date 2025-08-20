@@ -56,9 +56,9 @@ export default function RecentActivity({ userRole, assignments, events }: Recent
     const title = userRole === 'admin' ? 'Activité récente' : 'Mes actions récentes';
 
     return (
-      <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
           <Clock className="h-4 w-4 text-gray-400" />
         </div>
         
@@ -170,9 +170,9 @@ export default function RecentActivity({ userRole, assignments, events }: Recent
   const title = userRole === 'admin' ? 'Activité récente' : 'Mes actions récentes';
 
   return (
-    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
         <Clock className="h-4 w-4 text-gray-400" />
       </div>
       

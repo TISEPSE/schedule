@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { 
   LayoutDashboard, 
@@ -14,8 +14,8 @@ import {
   GraduationCap,
   FileText,
   CalendarDays,
-  ClipboardList,
-  Calendar
+  Calendar,
+  Trello
 } from 'lucide-react';
 import { UserRole } from '@/types';
 
@@ -35,19 +35,18 @@ const adminNavItems = [
 
 const studentNavItems = [
   { icon: LayoutDashboard, label: 'Tableau de bord', href: '/dashboard' },
-  { icon: Calendar, label: 'Mon agenda', href: '/planning' },
+  { icon: Calendar, label: 'Mon emploi du temps', href: '/planning' },
   { icon: CalendarDays, label: 'Mon calendrier', href: '/calendar' },
-  { icon: ClipboardList, label: 'Mes devoirs', href: '/devoirs' },
   { icon: FileText, label: 'Mon bulletin', href: '/bulletin' },
-  { icon: Users, label: 'Ma classe', href: '/classes' },
+  { icon: Trello, label: 'Kanban Board', href: '/devoirs' },
   { icon: Building, label: 'Mon école', href: '/organization' },
+  { icon: Users, label: 'Ma classe', href: '/classes' },
   { icon: Settings, label: 'Paramètres', href: '/settings' },
   { icon: User, label: 'Mon profil', href: '/profile' },
 ];
 
 export default function Sidebar({ userRole, isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [currentPath, setCurrentPath] = useState(pathname);
   const [clickedPath, setClickedPath] = useState<string | null>(null);
   const navItems = userRole === 'admin' ? adminNavItems : studentNavItems;
@@ -130,7 +129,7 @@ export default function Sidebar({ userRole, isCollapsed, onToggle }: SidebarProp
               title={isCollapsed ? item.label : ''}
             >
               <Icon className={`${isCollapsed ? 'h-5 w-5' : 'h-4 w-4'} transition-all duration-300 ${
-                isActive ? 'text-white animate-bounce' : 'text-gray-500 group-hover:text-blue-500'
+                isActive ? 'text-white' : 'text-gray-500 group-hover:text-blue-500'
               }`} />
               {!isCollapsed && (
                 <span className={`text-sm transition-all duration-300 ${

@@ -130,7 +130,7 @@ export default function Dashboard({ user }: DashboardProps) {
     <div className="space-y-6">
 
       {/* Stats Grid - Full width */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 page-animate-delay-1">
         {stats.map((stat, index) => (
           <StatsCard key={index} {...stat} />
         ))}
@@ -139,7 +139,7 @@ export default function Dashboard({ user }: DashboardProps) {
       {/* Layout prioritaire selon le rôle */}
       {user.role === 'student' ? (
         // Layout étudiant - focalisé sur les cours et devoirs
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 page-animate-delay-2">
           
           {/* Zone principale - Informations critiques */}
           <div className="lg:col-span-8 space-y-6">
@@ -165,7 +165,7 @@ export default function Dashboard({ user }: DashboardProps) {
         </div>
       ) : (
         // Layout admin - focalisé sur la gestion et surveillance
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 page-animate-delay-2">
           
           {/* Zone principale - Vue d'ensemble et gestion */}
           <div className="lg:col-span-8 space-y-6">

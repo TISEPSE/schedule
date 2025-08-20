@@ -81,7 +81,7 @@ export default function EventDetailsModal({ isOpen, onClose, event }: EventDetai
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div className="flex items-center space-x-3">
             <Calendar className="h-6 w-6 text-blue-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Détails de l'événement</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Détails de l&rsquo;événement</h2>
           </div>
           <button
             onClick={onClose}

@@ -3,16 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
 // Types locaux pour éviter les imports de modules serveur
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: 'student' | 'admin';
-  avatar?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 interface Event {
   id: string;
@@ -95,7 +85,7 @@ export function useApiData(userId: string): DataHookReturn {
 
       if (eventsData.success) {
         // Convertir les dates string en objets Date
-        const processedEvents = eventsData.events.map((event: any) => ({
+        const processedEvents = eventsData.events.map((event: {id: string; title: string; type: string; startTime: string; endTime: string; createdAt: string; updatedAt: string; subject?: string; location?: string; description?: string}) => ({
           ...event,
           startTime: new Date(event.startTime),
           endTime: new Date(event.endTime),
@@ -107,7 +97,7 @@ export function useApiData(userId: string): DataHookReturn {
 
       if (assignmentsData.success) {
         // Convertir les dates string en objets Date
-        const processedAssignments = assignmentsData.assignments.map((assignment: any) => ({
+        const processedAssignments = assignmentsData.assignments.map((assignment: {id: string; title: string; description: string; subject: string; dueDate: string; priority: string; completed: boolean; createdAt: string; updatedAt: string; status?: string}) => ({
           ...assignment,
           dueDate: new Date(assignment.dueDate),
           createdAt: new Date(assignment.createdAt),

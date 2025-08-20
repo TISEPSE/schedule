@@ -6,18 +6,11 @@ import { useApiData } from '@/hooks/useApiData';
 import { useAuth } from '@/context/AuthContext';
 import EventModal, { EventFormData } from './EventModal';
 import EventDetailsModal from './EventDetailsModal';
-import { v4 as uuidv4 } from 'uuid';
+
+import { getLegacyEventColor } from '@/lib/colors';
 
 const getEventColor = (type: string) => {
-  const colors: Record<string, string> = {
-    course: 'bg-blue-500',
-    practical: 'bg-green-500', 
-    exam: 'bg-red-500',
-    project: 'bg-teal-500',
-    sport: 'bg-indigo-500',
-    study: 'bg-gray-500'
-  };
-  return colors[type] || 'bg-gray-500';
+  return getLegacyEventColor(type);
 };
 
 export default function Calendar() {
@@ -27,7 +20,7 @@ export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [selectedEvent, setSelectedEvent] = useState<{id: string; title: string; type: string; startTime: string; endTime: string; subject?: string; location?: string; description?: string} | null>(null);
 
   // Générer les jours du mois avec grille fixe de 42 cases (6 semaines)
   const getDaysInMonth = (date: Date) => {
@@ -115,7 +108,7 @@ export default function Calendar() {
     });
   };
 
-  const handleEventClick = (event: any) => {
+  const handleEventClick = (event: {id: string; title: string; type: string; startTime: string; endTime: string; subject?: string; location?: string; description?: string}) => {
     // Trouver l'événement complet dans la liste
     const fullEvent = events.find(e => e.id === event.id);
     if (fullEvent) {

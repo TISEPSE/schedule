@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 export default function DebugPage() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<Array<{id: string; email: string; firstName: string; lastName: string; role: string}>>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -81,7 +81,7 @@ export default function DebugPage() {
         setMessage(`✅ ${data.message}`);
         if (data.testCredentials) {
           let credentialsText = '\n🔐 Identifiants de test créés:\n';
-          data.testCredentials.forEach((cred: any) => {
+          data.testCredentials.forEach((cred: {description: string; email: string; password: string; role: string}) => {
             credentialsText += `\n${cred.description}:\n`;
             credentialsText += `📧 Email: ${cred.email}\n`;
             credentialsText += `🔑 Mot de passe: ${cred.password}\n`;
@@ -94,6 +94,34 @@ export default function DebugPage() {
         await handleLoadUsers();
       } else {
         setMessage(`❌ ${data.error}`);
+      }
+    } catch (error) {
+      setMessage(`❌ Erreur: ${error}`);
+    }
+    setLoading(false);
+  };
+
+  const handleDiagnostic = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/diagnostic');
+      const data = await response.json();
+      
+      if (data.success) {
+        let diagnosticText = '🔍 Diagnostic de la base de données:\n\n';
+        diagnosticText += `👤 Utilisateurs: ${data.diagnostic.users.length}\n`;
+        data.diagnostic.users.forEach((user: {id: string; email: string; role: string}) => {
+          diagnosticText += `  - ${user.email} (ID: ${user.id}, Rôle: ${user.role})\n`;
+        });
+        diagnosticText += `\n📅 Événements: ${data.diagnostic.totalEvents}\n`;
+        diagnosticText += `📝 Devoirs: ${data.diagnostic.totalAssignments}`;
+        
+        setMessage(diagnosticText);
+      } else {
+        setMessage(`❌ Diagnostic échoué: ${data.error}`);
+        if (data.stack) {
+          setMessage(prev => prev + `\n\nStack trace:\n${data.stack}`);
+        }
       }
     } catch (error) {
       setMessage(`❌ Erreur: ${error}`);
@@ -140,6 +168,14 @@ export default function DebugPage() {
               className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-xl transition-colors disabled:opacity-50"
             >
               {loading ? 'Création...' : 'Créer données de test'}
+            </button>
+
+            <button
+              onClick={handleDiagnostic}
+              disabled={loading}
+              className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-3 px-6 rounded-xl transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Diagnostic...' : 'Diagnostic DB'}
             </button>
           </div>
           
@@ -199,7 +235,7 @@ export default function DebugPage() {
             <p>3. <strong>Charger utilisateurs</strong> : Affiche tous les utilisateurs de la base</p>
             <p>4. <strong>Créer données de test</strong> : Crée utilisateurs, événements et devoirs de test complets</p>
             
-            <p className="mt-4 font-semibold">Utilise "Créer données de test" pour avoir :</p>
+            <p className="mt-4 font-semibold">Utilise &ldquo;Créer données de test&rdquo; pour avoir :</p>
             <div className="flex justify-center mt-2">
               <div className="bg-white p-3 rounded-lg border border-blue-200">
                 <p className="text-sm font-medium text-center">🧪 Utilisateur de test</p>

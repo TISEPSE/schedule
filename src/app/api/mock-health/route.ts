@@ -17,7 +17,7 @@ export async function GET() {
     } else {
       return NextResponse.json({ status: 'unhealthy' }, { status: 503 });
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { status: 'error', message: 'Mock database connection failed' },
       { status: 503 }

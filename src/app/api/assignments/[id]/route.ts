@@ -8,7 +8,7 @@ export async function PUT(
 ) {
   try {
     const assignmentData = await request.json();
-    const id = params.id;
+    const { id } = await params;
     
     if (!id) {
       return NextResponse.json({
@@ -48,7 +48,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
     
     if (!id) {
       return NextResponse.json({

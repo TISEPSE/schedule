@@ -14,8 +14,6 @@ import {
   AlertCircle,
   Calendar,
   Filter,
-  CheckCircle,
-  Circle,
   GraduationCap
 } from 'lucide-react';
 
@@ -40,19 +38,7 @@ interface WeeklyItem {
   priority?: 'low' | 'medium' | 'high';
 }
 
-const getItemColors = (type: string, priority?: string) => {
-  const colorMaps: Record<string, { color: string; borderColor: string; bgColor: string }> = {
-    course: { color: 'bg-blue-600', borderColor: 'border-l-blue-600', bgColor: 'bg-blue-100' },
-    practical: { color: 'bg-emerald-600', borderColor: 'border-l-emerald-600', bgColor: 'bg-emerald-100' }, 
-    exam: { color: 'bg-red-600', borderColor: 'border-l-red-600', bgColor: 'bg-red-100' },
-    assignment: priority === 'high' 
-      ? { color: 'bg-orange-600', borderColor: 'border-l-orange-600', bgColor: 'bg-orange-100' }
-      : priority === 'low' 
-        ? { color: 'bg-slate-600', borderColor: 'border-l-slate-600', bgColor: 'bg-slate-100' }
-        : { color: 'bg-amber-600', borderColor: 'border-l-amber-600', bgColor: 'bg-amber-100' }
-  };
-  return colorMaps[type] || { color: 'bg-slate-600', borderColor: 'border-l-slate-600', bgColor: 'bg-slate-100' };
-};
+import { getItemColors } from '@/lib/colors';
 
 const getDayName = (date: Date) => {
   const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -61,7 +47,7 @@ const getDayName = (date: Date) => {
 
 export default function PlanningPage() {
   const { user, logout } = useAuth();
-  const { events, assignments, createEvent, createAssignment, updateAssignment } = useApiData(user?.id || '');
+  const { events } = useApiData(user?.id || '');
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
@@ -99,7 +85,7 @@ export default function PlanningPage() {
         return eventDate >= weekStart && eventDate <= weekEnd;
       })
       .map(event => {
-        const colors = getItemColors(event.type);
+        const colors = getItemColors(event.type, undefined, event.title);
         return {
           id: event.id,
           title: event.title,
@@ -109,43 +95,21 @@ export default function PlanningPage() {
           endTime: new Date(event.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
           location: event.location,
           description: event.description,
-          color: colors.color,
-          borderColor: colors.borderColor,
-          bgColor: colors.bgColor
+          color: colors.background,
+          borderColor: colors.border,
+          bgColor: colors.backgroundLight
         };
       }),
-    // Devoirs
-    ...assignments
-      .filter(assignment => {
-        const dueDate = new Date(assignment.dueDate);
-        return dueDate >= weekStart && dueDate <= weekEnd;
-      })
-      .map(assignment => {
-        const colors = getItemColors('assignment', assignment.priority);
-        return {
-          id: assignment.id,
-          title: assignment.title,
-          type: 'assignment' as const,
-          day: getDayName(new Date(assignment.dueDate)),
-          dueTime: new Date(assignment.dueDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-          subject: assignment.subject,
-          description: assignment.description,
-          color: colors.color,
-          borderColor: colors.borderColor,
-          bgColor: colors.bgColor,
-          completed: assignment.completed,
-          priority: assignment.priority
-        };
-      })
+    // Note: Les devoirs sont maintenant gérés dans la page "Mes devoirs" avec un kanban board
   ];
 
-  // Filtrer les éléments selon le filtre actif
+  // Filtrer uniquement les cours, TP et examens (pas les devoirs)
   const filteredItems = weeklyItems.filter(item => {
-    if (activeFilter === 'all') return true;
+    const courseTypes = ['course', 'practical', 'exam'];
+    if (activeFilter === 'all') return courseTypes.includes(item.type);
     if (activeFilter === 'courses') return ['course', 'practical'].includes(item.type);
-    if (activeFilter === 'assignments') return item.type === 'assignment';
     if (activeFilter === 'exams') return item.type === 'exam';
-    return true;
+    return courseTypes.includes(item.type);
   });
 
   // Grouper par jour
@@ -170,17 +134,7 @@ export default function PlanningPage() {
     setCurrentWeek(newWeek);
   };
 
-  const handleAssignmentToggle = async (assignment: WeeklyItem) => {
-    if (assignment.type === 'assignment') {
-      const originalAssignment = assignments.find(a => a.id === assignment.id);
-      if (originalAssignment) {
-        await updateAssignment({
-          ...originalAssignment,
-          completed: !originalAssignment.completed
-        });
-      }
-    }
-  };
+  // Fonction supprimée - plus besoin de coches pour les cours
 
   const dayNames = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
   const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -188,7 +142,6 @@ export default function PlanningPage() {
   const filters = [
     { key: 'all', label: 'Tous', icon: Calendar },
     { key: 'courses', label: 'Cours', icon: GraduationCap },
-    { key: 'assignments', label: 'Devoirs', icon: BookOpen },
     { key: 'exams', label: 'Examens', icon: AlertCircle }
   ];
 
@@ -197,11 +150,11 @@ export default function PlanningPage() {
       <div className="space-y-6">
         
         {/* Header avec navigation et filtres - Consistent avec les autres pages */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 page-animate-delay-1">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Emploi du temps</h1>
-              <p className="text-gray-600">Vue hebdomadaire de vos cours et devoirs</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Mon emploi du temps</h1>
+              <p className="text-gray-600">Vue hebdomadaire de vos cours</p>
             </div>
             
             {/* Navigation semaine */}
@@ -251,19 +204,19 @@ export default function PlanningPage() {
         </div>
 
         {/* Vue hebdomadaire - Design amélioré */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
-            {dayKeys.map((dayKey, index) => {
-              const dayItems = itemsByDay[dayKey] || [];
-              const dayDate = weekDates[index];
-              const isToday = dayDate.toDateString() === new Date().toDateString();
-              const isWeekend = dayKey === 'saturday' || dayKey === 'sunday';
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 page-animate-delay-2">
+            <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
+              {dayKeys.map((dayKey, index) => {
+                const dayItems = itemsByDay[dayKey] || [];
+                const dayDate = weekDates[index];
+                const isToday = dayDate.toDateString() === new Date().toDateString();
+                const isWeekend = dayKey === 'saturday' || dayKey === 'sunday';
 
-              return (
-                <div 
-                  key={dayKey} 
-                  className={`${isWeekend ? 'opacity-60' : ''} ${isToday ? 'ring-2 ring-blue-100' : ''} rounded-xl`}
-                >
+                return (
+                  <div 
+                    key={dayKey} 
+                    className={`${isWeekend ? 'opacity-60' : ''} rounded-xl`}
+                  >
                   {/* Header du jour - Style uniforme */}
                   <div className="text-center mb-4 pb-3 border-b border-gray-200">
                     <div className="font-semibold text-gray-900 mb-2">{dayNames[index]}</div>
@@ -288,26 +241,12 @@ export default function PlanningPage() {
                       dayItems.map(item => (
                         <div
                           key={item.id}
-                          className={`p-4 rounded-xl ${item.bgColor} hover:shadow-md transition-all duration-200 cursor-pointer group border border-gray-200`}
+                          className={`p-4 rounded-xl ${item.bgColor} hover:shadow-lg hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer group border border-gray-200 hover:border-gray-300`}
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center space-x-2 mb-2">
-                                {item.type === 'assignment' && (
-                                  <button
-                                    onClick={() => handleAssignmentToggle(item)}
-                                    className="flex-shrink-0 hover:scale-110 transition-transform"
-                                  >
-                                    {item.completed ? (
-                                      <CheckCircle className="h-5 w-5 text-green-600" />
-                                    ) : (
-                                      <Circle className="h-5 w-5 text-gray-400" />
-                                    )}
-                                  </button>
-                                )}
-                                <h4 className={`font-semibold text-sm leading-tight ${
-                                  item.completed ? 'line-through text-gray-500' : 'text-gray-900'
-                                }`}>
+                              <div className="mb-2">
+                                <h4 className="font-semibold text-sm leading-tight text-gray-900">
                                   {item.title}
                                 </h4>
                               </div>
@@ -342,16 +281,6 @@ export default function PlanningPage() {
                                 <p className="text-xs text-gray-500 mb-3 line-clamp-2">{item.description}</p>
                               )}
                               
-                              {item.priority && item.type === 'assignment' && (
-                                <span className={`inline-block px-2 py-1 text-xs rounded-full font-medium ${
-                                  item.priority === 'high' ? 'bg-red-100 text-red-700' :
-                                  item.priority === 'low' ? 'bg-gray-100 text-gray-700' :
-                                  'bg-yellow-100 text-yellow-700'
-                                }`}>
-                                  {item.priority === 'high' ? 'Priorité haute' :
-                                   item.priority === 'low' ? 'Priorité basse' : 'Priorité normale'}
-                                </span>
-                              )}
                             </div>
                           </div>
                         </div>
@@ -361,24 +290,7 @@ export default function PlanningPage() {
                 </div>
               );
             })}
-          </div>
-
-          {/* Message vide global - Amélioration du design */}
-          {filteredItems.length === 0 && (
-            <div className="text-center py-16">
-              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Calendar className="h-10 w-10 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Aucun élément cette semaine</h3>
-              <p className="text-gray-600 text-lg">
-                {activeFilter === 'all' 
-                  ? 'Votre emploi du temps est vide pour cette semaine.'
-                  : `Aucun ${filters.find(f => f.key === activeFilter)?.label.toLowerCase()} trouvé cette semaine.`
-                }
-              </p>
-              <p className="text-gray-500 text-sm mt-2">Profitez de ce temps libre pour vous reposer ou étudier !</p>
             </div>
-          )}
         </div>
       </div>
     </MainLayout>

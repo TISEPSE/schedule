@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { SyncService, SyncStatus as SyncStatusType } from '@/lib/services/syncService';
-import { Wifi, WifiOff, RefreshCw, Clock, AlertCircle, CheckCircle } from 'lucide-react';
+import { WifiOff, RefreshCw, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface SyncStatusProps {
   className?: string;

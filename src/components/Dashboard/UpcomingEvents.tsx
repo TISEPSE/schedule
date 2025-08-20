@@ -1,6 +1,7 @@
 import { Calendar, Clock, MapPin } from 'lucide-react';
 import { UserRole } from '@/types';
 import { Event } from '@/lib/database/local';
+import { getEventColors } from '@/lib/colors';
 
 interface UpcomingEventsProps {
   userRole: UserRole;
@@ -36,25 +37,28 @@ export default function UpcomingEvents({ userRole, events }: UpcomingEventsProps
 
     const studentEvents = [
       {
-        title: 'Cours de Maths',
+        title: 'Mathématiques',
         time: '08:00',
         location: 'Salle A12',
         date: 'Demain',
-        color: 'border-l-blue-500',
+        color: getEventColors('course').borderLight,
+        type: 'course'
       },
       {
-        title: 'TP Informatique',
+        title: 'Informatique',
         time: '14:00',
         location: 'Lab B3',
         date: 'Mercredi',
-        color: 'border-l-green-500',
+        color: getEventColors('practical').borderLight,
+        type: 'practical'
       },
       {
         title: 'Contrôle Français',
         time: '10:00',
         location: 'Amphi C',
         date: 'Vendredi',
-        color: 'border-l-red-500',
+        color: getEventColors('exam').borderLight,
+        type: 'exam'
       },
     ];
 
@@ -100,17 +104,9 @@ export default function UpcomingEvents({ userRole, events }: UpcomingEventsProps
     );
   }
 
-  // Pour l'utilisateur test : utiliser les vraies données
+  // Pour l'utilisateur test : utiliser les vraies données avec les couleurs cohérentes
   const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'course': return 'border-l-blue-500';
-      case 'exam': return 'border-l-red-500';
-      case 'practical': return 'border-l-green-500';
-      case 'project': return 'border-l-purple-500';
-      case 'sport': return 'border-l-orange-500';
-      case 'study': return 'border-l-yellow-500';
-      default: return 'border-l-gray-500';
-    }
+    return getEventColors(type).borderLight;
   };
   
   const formatDateTime = (date: Date) => {

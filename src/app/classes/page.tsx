@@ -134,7 +134,7 @@ export default function ClassesPage() {
                 <h1 className="text-2xl font-bold text-gray-900">Ma classe</h1>
                 <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">BTS 1</span>
               </div>
-              <p className="text-gray-600">Connectez-vous avec vos camarades et l'équipe pédagogique</p>
+              <p className="text-gray-600">Connectez-vous avec vos camarades et l&apos;équipe pédagogique</p>
             </div>
           </div>
         </div>

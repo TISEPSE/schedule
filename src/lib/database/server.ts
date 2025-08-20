@@ -18,7 +18,7 @@ const DB_PATH = path.join(process.cwd(), 'data', 'schedule.db');
 const dataDir = path.join(process.cwd(), 'data');
 try {
   mkdirSync(dataDir, { recursive: true });
-} catch (error) {
+} catch {
   // Le répertoire existe déjà, c'est ok
 }
 

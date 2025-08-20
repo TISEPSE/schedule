@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Calendar, Clock, MapPin, User, Tag, Plus } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, Tag } from 'lucide-react';
 
 interface EventModalProps {
   isOpen: boolean;
@@ -26,7 +26,6 @@ const eventTypes = [
     color: 'bg-blue-500',
     lightColor: 'bg-blue-50',
     textColor: 'text-blue-700',
-    borderColor: 'border-blue-500',
     dotColor: 'bg-blue-500'
   },
   { 
@@ -35,7 +34,6 @@ const eventTypes = [
     color: 'bg-green-500',
     lightColor: 'bg-green-50',
     textColor: 'text-green-700',
-    borderColor: 'border-green-500',
     dotColor: 'bg-green-500'
   },
   { 
@@ -44,7 +42,6 @@ const eventTypes = [
     color: 'bg-red-500',
     lightColor: 'bg-red-50',
     textColor: 'text-red-700',
-    borderColor: 'border-red-500',
     dotColor: 'bg-red-500'
   },
   { 
@@ -53,7 +50,6 @@ const eventTypes = [
     color: 'bg-teal-500',
     lightColor: 'bg-teal-50',
     textColor: 'text-teal-700',
-    borderColor: 'border-teal-500',
     dotColor: 'bg-teal-500'
   },
   { 
@@ -62,7 +58,6 @@ const eventTypes = [
     color: 'bg-purple-500',
     lightColor: 'bg-purple-50',
     textColor: 'text-purple-700',
-    borderColor: 'border-purple-500',
     dotColor: 'bg-purple-500'
   },
   { 
@@ -71,7 +66,6 @@ const eventTypes = [
     color: 'bg-amber-500',
     lightColor: 'bg-amber-50',
     textColor: 'text-amber-700',
-    borderColor: 'border-amber-500',
     dotColor: 'bg-amber-500'
   }
 ] as const;
@@ -180,18 +174,15 @@ export default function EventModal({ isOpen, onClose, onSubmit, selectedDate }: 
           `}</style>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <div className="flex items-center space-x-3">
-            <Plus className="h-6 w-6 text-blue-600" />
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Créer un événement
-              </h2>
-              {selectedDate && (
-                <p className="text-sm text-gray-500 mt-1">
-                  {formatDate(selectedDate)}
-                </p>
-              )}
-            </div>
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Créer un événement
+            </h2>
+            {selectedDate && (
+              <p className="text-sm text-gray-500 mt-1">
+                {formatDate(selectedDate)}
+              </p>
+            )}
           </div>
           <button
             onClick={handleClose}
@@ -207,7 +198,7 @@ export default function EventModal({ isOpen, onClose, onSubmit, selectedDate }: 
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-2">
               <Tag className="inline h-4 w-4 mr-1 text-blue-600" />
-              Titre de l'événement *
+              Titre de l&rsquo;événement *
             </label>
             <input
               type="text"
@@ -227,7 +218,7 @@ export default function EventModal({ isOpen, onClose, onSubmit, selectedDate }: 
           {/* Type */}
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Type d'événement
+              Type d&rsquo;événement
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {eventTypes.map((type) => {
@@ -237,9 +228,9 @@ export default function EventModal({ isOpen, onClose, onSubmit, selectedDate }: 
                     key={type.value}
                     type="button"
                     onClick={() => setFormData({ ...formData, type: type.value })}
-                    className={`p-4 border-2 rounded-2xl transition-all duration-300 hover:scale-[1.05] hover:shadow-lg flex items-center space-x-3 relative overflow-hidden ${
+                    className={`p-4 border-2 rounded-2xl transition-all duration-150 hover:scale-[1.05] hover:shadow-lg flex items-center space-x-3 relative overflow-hidden ${
                       isSelected
-                        ? `${type.borderColor} ${type.lightColor} ${type.textColor} shadow-lg transform scale-[1.02]`
+                        ? `border-gray-300 ${type.lightColor} ${type.textColor} shadow-lg transform scale-[1.02]`
                         : 'border-gray-200 hover:border-gray-300 bg-white/50 text-gray-700'
                     }`}
                   >
@@ -258,7 +249,7 @@ export default function EventModal({ isOpen, onClose, onSubmit, selectedDate }: 
           <div className="grid grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-bold text-gray-800 mb-3">
-                <Clock className="inline h-4 w-4 mr-2 text-emerald-600" />
+                <Clock className="inline h-4 w-4 mr-2 text-gray-600" />
                 Heure de début *
               </label>
               <input
@@ -266,8 +257,8 @@ export default function EventModal({ isOpen, onClose, onSubmit, selectedDate }: 
                 value={formData.startTime}
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                 style={{ color: '#1f2937' }}
-                className={`w-full px-5 py-4 border-2 bg-white/70 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:border-emerald-400 transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
-                  errors.startTime ? 'border-red-400 focus:ring-red-100' : 'border-emerald-200 hover:border-emerald-300'
+                className={`w-full px-5 py-4 border-2 bg-white rounded-2xl focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-all duration-150 hover:shadow-md ${
+                  errors.startTime ? 'border-red-400 focus:ring-red-100' : 'border-gray-200 hover:border-gray-300'
                 }`}
               />
               {errors.startTime && (
@@ -276,7 +267,7 @@ export default function EventModal({ isOpen, onClose, onSubmit, selectedDate }: 
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-800 mb-3">
-                <Clock className="inline h-4 w-4 mr-2 text-rose-600" />
+                <Clock className="inline h-4 w-4 mr-2 text-gray-600" />
                 Heure de fin *
               </label>
               <input
@@ -284,8 +275,8 @@ export default function EventModal({ isOpen, onClose, onSubmit, selectedDate }: 
                 value={formData.endTime}
                 onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                 style={{ color: '#1f2937' }}
-                className={`w-full px-5 py-4 border-2 bg-white/70 rounded-2xl focus:ring-4 focus:ring-rose-100 focus:border-rose-400 transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
-                  errors.endTime ? 'border-red-400 focus:ring-red-100' : 'border-rose-200 hover:border-rose-300'
+                className={`w-full px-5 py-4 border-2 bg-white rounded-2xl focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-all duration-150 hover:shadow-md ${
+                  errors.endTime ? 'border-red-400 focus:ring-red-100' : 'border-gray-200 hover:border-gray-300'
                 }`}
               />
               {errors.endTime && (
@@ -297,14 +288,14 @@ export default function EventModal({ isOpen, onClose, onSubmit, selectedDate }: 
           {/* Lieu */}
           <div>
             <label className="block text-sm font-bold text-gray-800 mb-3">
-              <MapPin className="inline h-4 w-4 mr-2 text-teal-600" />
+              <MapPin className="inline h-4 w-4 mr-2 text-gray-600" />
               Lieu (optionnel)
             </label>
             <input
               type="text"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className="w-full px-5 py-4 border-2 border-teal-200 bg-white/70 rounded-2xl focus:ring-4 focus:ring-teal-100 focus:border-teal-400 transition-all duration-300 hover:shadow-md hover:border-teal-300 backdrop-blur-sm"
+              className="w-full px-5 py-4 border-2 border-gray-200 bg-white rounded-2xl focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-all duration-150 hover:shadow-md hover:border-gray-300"
               placeholder="Ex: Salle 201"
               style={{ color: '#1f2937' }}
             />
@@ -319,7 +310,7 @@ export default function EventModal({ isOpen, onClose, onSubmit, selectedDate }: 
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={4}
-              className="w-full px-5 py-4 border-2 border-purple-200 bg-white/70 rounded-2xl focus:ring-4 focus:ring-purple-100 focus:border-purple-400 transition-all duration-300 hover:shadow-md hover:border-purple-300 resize-none backdrop-blur-sm"
+              className="w-full px-5 py-4 border-2 border-gray-200 bg-white rounded-2xl focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-all duration-150 hover:shadow-md hover:border-gray-300 resize-none"
               placeholder="Ajoutez des détails sur cet événement..."
               style={{ color: '#1f2937' }}
             />
@@ -339,7 +330,7 @@ export default function EventModal({ isOpen, onClose, onSubmit, selectedDate }: 
               className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 hover:scale-[1.05] text-white rounded-2xl font-bold transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
             >
               <Calendar className="h-5 w-5" />
-              <span>Créer l'événement</span>
+              <span>Créer l&rsquo;événement</span>
             </button>
           </div>
         </form>

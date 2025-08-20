@@ -11,7 +11,7 @@ interface WelcomeNotificationProps {
   startTime: number | null;
 }
 
-export default function WelcomeNotification({ userName, userRole, show, onHide, startTime }: WelcomeNotificationProps) {
+export default function WelcomeNotification({ userRole, show, onHide, startTime }: WelcomeNotificationProps) {
   // Calculer le temps écoulé pour synchroniser la barre de progression
   const [elapsedTime, setElapsedTime] = useState(0);
 

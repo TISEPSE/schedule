@@ -26,38 +26,55 @@ export async function POST() {
       console.log(`👤 Utilisateur créé: ${user.email}`);
     }
     
-    // Créer quelques événements de test pour le premier utilisateur
+    // Créer quelques événements de test pour le premier utilisateur (seulement en semaine)
     const testUser = createdUsers[0];
     const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
+    
+    // Fonction pour obtenir le prochain jour de semaine
+    const getNextWeekday = (date: Date, daysToAdd: number) => {
+      const newDate = new Date(date);
+      newDate.setDate(date.getDate() + daysToAdd);
+      
+      // Si c'est le week-end, décaler au lundi
+      if (newDate.getDay() === 0) { // Dimanche
+        newDate.setDate(newDate.getDate() + 1);
+      } else if (newDate.getDay() === 6) { // Samedi
+        newDate.setDate(newDate.getDate() + 2);
+      }
+      
+      return newDate;
+    };
+    
+    const day1 = getNextWeekday(today, 0); // Aujourd'hui si jour de semaine
+    const day2 = getNextWeekday(today, 1); // Demain si jour de semaine
+    const day3 = getNextWeekday(today, 2); // Après-demain si jour de semaine
     
     const sampleEvents = [
       {
         userId: testUser.id,
-        title: 'Cours de Mathématiques',
+        title: 'Mathématiques',
         description: 'Algèbre linéaire - Chapitre 3',
         type: 'course' as const,
-        startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0),
-        endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 30),
+        startTime: new Date(day1.getFullYear(), day1.getMonth(), day1.getDate(), 9, 0),
+        endTime: new Date(day1.getFullYear(), day1.getMonth(), day1.getDate(), 10, 30),
         location: 'Salle A101'
       },
       {
         userId: testUser.id,
-        title: 'Réunion de Projet',
-        description: 'Point sur l\'avancement du projet final',
-        type: 'project' as const,
-        startTime: new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 14, 0),
-        endTime: new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 15, 30),
-        location: 'Salle B205'
+        title: 'Physique-Chimie',
+        description: 'Travaux pratiques optique',
+        type: 'practical' as const,
+        startTime: new Date(day2.getFullYear(), day2.getMonth(), day2.getDate(), 14, 0),
+        endTime: new Date(day2.getFullYear(), day2.getMonth(), day2.getDate(), 16, 0),
+        location: 'Labo B205'
       },
       {
         userId: testUser.id,
-        title: 'Examen de Physique',
-        description: 'Examen final - Mécanique quantique',
+        title: 'Contrôle Histoire',
+        description: 'Évaluation - Seconde Guerre mondiale',
         type: 'exam' as const,
-        startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3, 10, 0),
-        endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3, 12, 0),
+        startTime: new Date(day3.getFullYear(), day3.getMonth(), day3.getDate(), 10, 0),
+        endTime: new Date(day3.getFullYear(), day3.getMonth(), day3.getDate(), 12, 0),
         location: 'Amphi C'
       }
     ];
@@ -69,7 +86,10 @@ export async function POST() {
       console.log(`📅 Événement créé: ${event.title}`);
     }
     
-    // Créer quelques devoirs de test
+    // Créer quelques devoirs de test (seulement pour des jours de semaine)
+    const assignmentDay1 = getNextWeekday(today, 5); // Dans 5 jours (semaine)
+    const assignmentDay2 = getNextWeekday(today, 3); // Dans 3 jours (semaine)
+    
     const sampleAssignments = [
       {
         userId: testUser.id,
@@ -77,7 +97,7 @@ export async function POST() {
         description: 'Analyse des résultats de l\'expérience de physique',
         subject: 'Physique',
         type: 'report' as const,
-        dueDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7),
+        dueDate: assignmentDay1,
         priority: 'high' as const
       },
       {
@@ -86,7 +106,7 @@ export async function POST() {
         description: 'Chapitre 3 - Exercices 1 à 15',
         subject: 'Mathématiques',
         type: 'homework' as const,
-        dueDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3),
+        dueDate: assignmentDay2,
         priority: 'medium' as const
       }
     ];

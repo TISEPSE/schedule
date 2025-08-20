@@ -15,7 +15,12 @@
       "Bash(node:*)",
       "Bash(mkdir:*)",
       "Bash(mv:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(copy:*)",
+      "Bash(del \"D:\\Visual_Studio_Code\\Portfolio_Dev\\Application Emplois du temps\\schedule\\src\\app\\devoirs\\page_clean.tsx\")",
+      "Bash(npm run lint)",
+      "Bash(git add:*)",
+      "Bash(del \"D:\\Visual_Studio_Code\\Portfolio_Dev\\Application Emplois du temps\\schedule\\src\\lib\\animations.ts\")"
     ],
     "deny": [],
     "ask": []
