@@ -1,12 +1,42 @@
 export type UserRole = 'admin' | 'student';
 
+// Types de base de données (définis localement pour éviter les imports serveur côté client)
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: UserRole;
+  role: 'student' | 'admin';
   avatar?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Event {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  type: 'course' | 'practical' | 'exam' | 'project' | 'sport' | 'study';
+  startTime: Date;
+  endTime: Date;
+  location?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Assignment {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  subject: string;
+  type: 'homework' | 'report' | 'essay' | 'study' | 'presentation' | 'research' | 'reading';
+  dueDate: Date;
+  completed: boolean;
+  priority: 'low' | 'medium' | 'high';
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface School {

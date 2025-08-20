@@ -10,7 +10,7 @@ import WeatherWidget from './WeatherWidget';
 import NextClass from './NextClass';
 import Assignments from './Assignments';
 import DataTestPanel from '../Test/DataTestPanel';
-import { useData } from '@/hooks/useData';
+import { useApiData } from '@/hooks/useApiData';
 
 interface DashboardProps {
   user: User;
@@ -87,7 +87,7 @@ const studentStats = [
 ];
 
 export default function Dashboard({ user }: DashboardProps) {
-  const { assignments, events } = useData(user.id);
+  const { assignments, events } = useApiData(user.id);
   
   // Utiliser les vraies données seulement pour l'utilisateur test, sinon données statiques
   const isTestUser = user.id === '4' || user.email === 'test@app.com';

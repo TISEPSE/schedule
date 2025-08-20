@@ -2,31 +2,32 @@
 
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { useApiData } from '@/hooks/useApiData';
+import { useAuth } from '@/context/AuthContext';
+import EventModal, { EventFormData } from './EventModal';
+import EventDetailsModal from './EventDetailsModal';
+import { v4 as uuidv4 } from 'uuid';
 
-interface CalendarEvent {
-  id: string;
-  title: string;
-  time: string;
-  type: 'course' | 'study' | 'exam' | 'personal';
-  color: string;
-}
-
-const mockEvents: Record<string, CalendarEvent[]> = {
-  '2024-01-15': [
-    { id: '1', title: 'Mathématiques', time: '08:00', type: 'course', color: 'bg-blue-500' },
-    { id: '2', title: 'Révisions Français', time: '14:00', type: 'study', color: 'bg-green-500' },
-  ],
-  '2024-01-16': [
-    { id: '3', title: 'Contrôle Physique', time: '10:00', type: 'exam', color: 'bg-red-500' },
-  ],
-  '2024-01-18': [
-    { id: '4', title: 'Projet groupe', time: '16:00', type: 'personal', color: 'bg-purple-500' },
-  ],
+const getEventColor = (type: string) => {
+  const colors: Record<string, string> = {
+    course: 'bg-blue-500',
+    practical: 'bg-green-500', 
+    exam: 'bg-red-500',
+    project: 'bg-teal-500',
+    sport: 'bg-indigo-500',
+    study: 'bg-gray-500'
+  };
+  return colors[type] || 'bg-gray-500';
 };
 
 export default function Calendar() {
+  const { user } = useAuth();
+  const { events, createEvent } = useApiData(user?.id || '');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
 
   // Générer les jours du mois avec grille fixe de 42 cases (6 semaines)
   const getDaysInMonth = (date: Date) => {
@@ -76,7 +77,61 @@ export default function Calendar() {
   };
 
   const getEventsForDate = (date: Date) => {
-    return mockEvents[formatDate(date)] || [];
+    const dateStr = formatDate(date);
+    return events.filter(event => {
+      const eventDate = new Date(event.startTime);
+      return formatDate(eventDate) === dateStr;
+    }).map(event => ({
+      id: event.id,
+      title: event.title,
+      time: new Date(event.startTime).toLocaleTimeString('fr-FR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      }),
+      type: event.type,
+      color: getEventColor(event.type),
+      location: event.location
+    }));
+  };
+
+  const handleCreateEvent = async (formData: EventFormData) => {
+    if (!selectedDate || !user) return;
+    
+    const startDateTime = new Date(selectedDate);
+    const [startHours, startMinutes] = formData.startTime.split(':');
+    startDateTime.setHours(parseInt(startHours), parseInt(startMinutes));
+    
+    const endDateTime = new Date(selectedDate);
+    const [endHours, endMinutes] = formData.endTime.split(':');
+    endDateTime.setHours(parseInt(endHours), parseInt(endMinutes));
+    
+    await createEvent({
+      title: formData.title,
+      description: formData.description,
+      type: formData.type,
+      startTime: startDateTime,
+      endTime: endDateTime,
+      location: formData.location,
+    });
+  };
+
+  const handleEventClick = (event: any) => {
+    // Trouver l'événement complet dans la liste
+    const fullEvent = events.find(e => e.id === event.id);
+    if (fullEvent) {
+      setSelectedEvent(fullEvent);
+      setIsDetailsModalOpen(true);
+    }
+  };
+
+  const handleAddEventClick = () => {
+    if (selectedDate) {
+      setIsModalOpen(true);
+    } else {
+      // Sélectionner la date d'aujourd'hui par défaut
+      setSelectedDate(new Date());
+      setIsModalOpen(true);
+    }
   };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -158,26 +213,28 @@ export default function Calendar() {
                 className={`p-4 h-28 border border-gray-200 transition-colors relative rounded-xl ${
                   isSelected 
                     ? 'hover:bg-blue-400 hover:shadow-xl hover:ring-4 hover:ring-blue-150' 
-                    : isCurrentMonth 
-                      ? 'hover:bg-gray-50' 
-                      : 'bg-gray-50 hover:bg-gray-100'
+                    : isToday
+                      ? '' // Pas d'effet hover pour la date du jour
+                      : isCurrentMonth 
+                        ? 'hover:bg-gray-50' 
+                        : 'bg-gray-50 hover:bg-gray-100'
                 } ${
                   isSelected 
                     ? isCurrentMonth 
-                      ? 'bg-blue-500 border-blue-600 ring-2 ring-blue-300 shadow-lg' 
-                      : 'bg-blue-400 border-blue-500 ring-2 ring-blue-200 shadow-md' 
+                      ? 'bg-blue-100 border-blue-200 ring-2 ring-blue-300 shadow-lg' 
+                      : 'bg-blue-100 border-blue-200 ring-2 ring-blue-200 shadow-md' 
                     : ''
                 } ${
                   isToday 
-                    ? 'bg-blue-100 border-blue-200' 
+                    ? 'bg-blue-500 border-blue-600' 
                     : ''
                 }`}
               >
                 <div className={`text-base font-bold ${
                   isSelected
-                    ? 'text-white'
+                    ? 'text-blue-700'
                     : isToday 
-                      ? 'text-blue-700' 
+                      ? 'text-white' 
                       : isCurrentMonth 
                         ? 'text-gray-900' 
                         : 'text-gray-500'
@@ -187,14 +244,17 @@ export default function Calendar() {
                 
                 {/* Indicateurs d'événements */}
                 {hasEvents && isCurrentMonth && (
-                  <div className="absolute bottom-1 left-1 right-1">
-                    <div className="flex space-x-1">
+                  <div className="absolute bottom-2 left-2 right-2">
+                    <div className="flex justify-center space-x-1">
                       {getEventsForDate(day).slice(0, 3).map(event => (
                         <div
                           key={event.id}
-                          className={`h-1 flex-1 rounded-full ${event.color}`}
+                          className={`w-2 h-2 rounded-full ${event.color} shadow-sm`}
                         ></div>
                       ))}
+                      {getEventsForDate(day).length > 3 && (
+                        <div className="w-2 h-2 rounded-full bg-gray-400 shadow-sm"></div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -207,7 +267,10 @@ export default function Calendar() {
       {/* Panel des événements */}
       <div className="space-y-6">
         {/* Bouton ajouter événement */}
-        <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-4 px-6 rounded-2xl transition-colors flex items-center justify-center space-x-2 shadow-sm">
+        <button 
+          onClick={handleAddEventClick}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-4 px-6 rounded-2xl transition-colors flex items-center justify-center space-x-2 shadow-sm"
+        >
           <Plus className="h-4 w-4" />
           <span>Ajouter un événement</span>
         </button>
@@ -224,13 +287,20 @@ export default function Calendar() {
           {selectedEvents.length > 0 ? (
             <div className="space-y-3">
               {selectedEvents.map(event => (
-                <div key={event.id} className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl">
+                <button 
+                  key={event.id} 
+                  onClick={() => handleEventClick(event)}
+                  className="w-full flex items-center space-x-3 p-4 bg-gray-50 hover:bg-blue-50 rounded-xl transition-colors text-left"
+                >
                   <div className={`w-3 h-3 rounded-full ${event.color}`}></div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">{event.title}</p>
-                    <p className="text-xs text-gray-500">{event.time}</p>
+                    <p className="text-xs text-gray-500">
+                      {event.time}
+                      {event.location && ` • ${event.location}`}
+                    </p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           ) : (
@@ -240,29 +310,22 @@ export default function Calendar() {
           )}
         </div>
 
-        {/* Légende */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-base font-semibold text-gray-900 mb-3">Types d&apos;événements</h3>
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-              <span className="text-sm text-gray-700">Cours</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              <span className="text-sm text-gray-700">Révisions</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-red-500"></div>
-              <span className="text-sm text-gray-700">Examens</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-              <span className="text-sm text-gray-700">Personnel</span>
-            </div>
-          </div>
-        </div>
       </div>
+
+      {/* Modal de création d'événement */}
+      <EventModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateEvent}
+        selectedDate={selectedDate || undefined}
+      />
+
+      {/* Modal de détails d'événement */}
+      <EventDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        event={selectedEvent}
+      />
     </div>
   );
 }

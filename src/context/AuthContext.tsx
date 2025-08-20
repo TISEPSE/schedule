@@ -1,7 +1,18 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '@/types';
+
+// Types locaux pour éviter les imports de modules serveur
+interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: 'student' | 'admin';
+  avatar?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -12,41 +23,10 @@ interface AuthContextType {
   showWelcome: boolean;
   hideWelcome: () => void;
   welcomeStartTime: number | null;
+  initializeDatabase: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Mock users for demo
-const mockUsers: User[] = [
-  {
-    id: '1',
-    email: 'admin@app.com',
-    firstName: 'Admin',
-    lastName: 'System',
-    role: 'admin',
-  },
-  {
-    id: '2',
-    email: 'marie.dupont@student.com',
-    firstName: 'Marie',
-    lastName: 'Dupont',
-    role: 'student',
-  },
-  {
-    id: '3',
-    email: 'thomas.martin@student.com',
-    firstName: 'Thomas',
-    lastName: 'Martin',
-    role: 'student',
-  },
-  {
-    id: '4',
-    email: 'test@app.com',
-    firstName: 'Utilisateur',
-    lastName: 'Test',
-    role: 'student',
-  },
-];
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -71,30 +51,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
 
     try {
-      // Simulate API call delay
+      // Simuler un délai d'API
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Mock authentication
-      const foundUser = mockUsers.find(u => u.email === email);
-      
-      if (!foundUser) {
-        throw new Error('Email ou mot de passe incorrect');
+      // Appel API pour l'authentification
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Erreur de connexion');
       }
 
-      // In real app, you'd validate password here
-      const validPasswords: Record<string, string> = {
-        'admin@app.com': 'admin123',
-        'marie.dupont@student.com': 'marie123',
-        'thomas.martin@student.com': 'thomas123',
-        'test@app.com': 'test123',
-      };
-
-      if (validPasswords[email] !== password && !(email === 'test@app.com' && password === '')) {
-        throw new Error('Email ou mot de passe incorrect');
-      }
-
-      setUser(foundUser);
-      localStorage.setItem('user', JSON.stringify(foundUser));
+      setUser(data.user);
+      localStorage.setItem('user', JSON.stringify(data.user));
       setShowWelcome(true);
       
       // Enregistrer le moment de début
@@ -140,6 +116,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const initializeDatabase = async () => {
+    try {
+      // L'initialisation se fait maintenant côté serveur via les API
+      console.log('Initialisation déplacée côté serveur');
+    } catch (error) {
+      console.error('Erreur d\'initialisation de la DB:', error);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -150,6 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       showWelcome,
       hideWelcome,
       welcomeStartTime,
+      initializeDatabase,
     }}>
       {children}
     </AuthContext.Provider>

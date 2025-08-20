@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useData } from '@/hooks/useData';
+import { useApiData } from '@/hooks/useApiData';
 import { 
   Database, 
   Cloud, 
@@ -32,8 +32,8 @@ export default function DataTestPanel({ userId }: DataTestPanelProps) {
     deleteAssignment,
     deleteEvent,
     syncNow,
-    loadSampleData
-  } = useData(userId);
+    refreshData
+  } = useApiData(userId);
 
   const [showPanel, setShowPanel] = useState(false);
 
@@ -156,11 +156,11 @@ export default function DataTestPanel({ userId }: DataTestPanelProps) {
           </button>
           
           <button
-            onClick={loadSampleData}
+            onClick={refreshData}
             className="flex items-center justify-center space-x-1 text-sm bg-yellow-100 text-yellow-700 p-2 rounded hover:bg-yellow-200 col-span-2"
           >
             <Database className="h-3 w-3" />
-            <span>Charger données d&apos;exemple</span>
+            <span>Rafraîchir les données</span>
           </button>
         </div>
       </div>

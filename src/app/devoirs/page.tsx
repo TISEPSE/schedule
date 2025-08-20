@@ -228,7 +228,7 @@ export default function DevoirsPage() {
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Mes devoirs</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Mes devoirs</h1>
               <p className="text-gray-600">{mockDevoirsData.currentWeek}</p>
             </div>
             
