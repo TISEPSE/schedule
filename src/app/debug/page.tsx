@@ -200,18 +200,11 @@ export default function DebugPage() {
             <p>4. <strong>Créer données de test</strong> : Crée utilisateurs, événements et devoirs de test complets</p>
             
             <p className="mt-4 font-semibold">Utilise "Créer données de test" pour avoir :</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
-              <div className="bg-white p-2 rounded">
-                <p className="text-sm font-medium">👤 Étudiant principal</p>
-                <p className="text-xs">test@example.com / test123</p>
-              </div>
-              <div className="bg-white p-2 rounded">
-                <p className="text-sm font-medium">👨‍💼 Administrateur</p>
-                <p className="text-xs">admin@example.com / admin123</p>
-              </div>
-              <div className="bg-white p-2 rounded">
-                <p className="text-sm font-medium">👩‍🎓 Étudiant vide</p>
-                <p className="text-xs">etudiant@example.com / etudiant123</p>
+            <div className="flex justify-center mt-2">
+              <div className="bg-white p-3 rounded-lg border border-blue-200">
+                <p className="text-sm font-medium text-center">🧪 Utilisateur de test</p>
+                <p className="text-sm font-semibold text-center text-blue-700">test@app.com</p>
+                <p className="text-xs text-center text-blue-600">Mot de passe : test123 ou vide</p>
               </div>
             </div>
           </div>

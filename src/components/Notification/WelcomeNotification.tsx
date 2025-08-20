@@ -38,8 +38,8 @@ export default function WelcomeNotification({ userName, userRole, show, onHide, 
   const progressPercentage = Math.min((elapsedTime / 4000) * 100, 100);
 
   const message = userRole === 'admin' 
-    ? `Bonjour ${userName}, bienvenue dans l'administration !` 
-    : `Salut ${userName} ! Prêt pour une nouvelle journée ?`;
+    ? `Bienvenue dans l'administration !` 
+    : `Bienvenue dans votre espace étudiant !`;
 
   return (
     <div className="fixed top-4 right-4 z-50 animate-slide-in-right">

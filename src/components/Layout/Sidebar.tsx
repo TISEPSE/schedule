@@ -14,7 +14,8 @@ import {
   GraduationCap,
   FileText,
   CalendarDays,
-  ClipboardList
+  ClipboardList,
+  Calendar
 } from 'lucide-react';
 import { UserRole } from '@/types';
 
@@ -34,6 +35,7 @@ const adminNavItems = [
 
 const studentNavItems = [
   { icon: LayoutDashboard, label: 'Tableau de bord', href: '/dashboard' },
+  { icon: Calendar, label: 'Mon agenda', href: '/planning' },
   { icon: CalendarDays, label: 'Mon calendrier', href: '/calendar' },
   { icon: ClipboardList, label: 'Mes devoirs', href: '/devoirs' },
   { icon: FileText, label: 'Mon bulletin', href: '/bulletin' },

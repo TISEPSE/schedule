@@ -105,10 +105,14 @@ export default function ClassesPage() {
     return (
       <MainLayout user={user} onLogout={logout}>
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Gestion des utilisateurs</h1>
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Gestion des utilisateurs</h1>
+                <p className="text-gray-600">Modérez les comptes utilisateurs et gérez les accès</p>
+              </div>
+            </div>
             <div className="bg-gray-50 rounded-xl p-8 text-center">
-              <p className="text-gray-600">Modérez les comptes utilisateurs et gérez les accès.</p>
               <p className="text-sm text-gray-500 mt-2">
                 Fonctionnalités prévues : liste des utilisateurs, modération, permissions...
               </p>
@@ -122,9 +126,21 @@ export default function ClassesPage() {
   return (
     <MainLayout user={user} onLogout={logout}>
       <div className="space-y-6">
-        {/* Actions rapides */}
+        {/* Header */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">Ma classe - BTS 1</h3>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <div className="flex items-center space-x-3 mb-2">
+                <h1 className="text-2xl font-bold text-gray-900">Ma classe</h1>
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">BTS 1</span>
+              </div>
+              <p className="text-gray-600">Connectez-vous avec vos camarades et l'équipe pédagogique</p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Actions rapides */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <button className="p-4 text-center rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors">
               <FileText className="h-6 w-6 mx-auto mb-2" />

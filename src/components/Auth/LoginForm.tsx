@@ -115,13 +115,12 @@ export default function LoginForm({ onLogin, isLoading, error }: LoginFormProps)
           </form>
 
           {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-2 font-medium">Comptes de test :</p>
-            <div className="text-xs text-gray-500 space-y-1">
-              <p><strong>Marie:</strong> marie.dupont@student.com / marie123</p>
-              <p><strong>Thomas:</strong> thomas.martin@student.com / thomas123</p>
-              <p><strong>Test (vide):</strong> test@app.com / test123 ou vide</p>
-              <p className="text-gray-400"><strong>Admin:</strong> admin@app.com / admin123</p>
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-800 mb-2 font-medium">🧪 Application en phase de test</p>
+            <p className="text-xs text-blue-600 mb-2">Utilisateur de test :</p>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-blue-700">test@app.com</p>
+              <p className="text-xs text-blue-600">Mot de passe : <strong>test123</strong> ou <strong>vide</strong></p>
             </div>
           </div>
         </div>

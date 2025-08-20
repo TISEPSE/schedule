@@ -8,24 +8,12 @@ export async function POST() {
     // Nettoyer toutes les données existantes
     await ServerDatabaseService.clearAllData();
     
-    // Créer des utilisateurs de test
+    // Créer un seul utilisateur de test
     const testUsers = [
       {
-        email: 'test@example.com',
+        email: 'test@app.com',
         firstName: 'Utilisateur',
         lastName: 'Test',
-        role: 'student' as const
-      },
-      {
-        email: 'admin@example.com', 
-        firstName: 'Admin',
-        lastName: 'Système',
-        role: 'admin' as const
-      },
-      {
-        email: 'etudiant@example.com',
-        firstName: 'Marie',
-        lastName: 'Dupont',
         role: 'student' as const
       }
     ];
@@ -115,22 +103,10 @@ export async function POST() {
       message: 'Données de test créées avec succès',
       testCredentials: [
         {
-          email: 'test@example.com',
-          password: 'test123',
+          email: 'test@app.com',
+          password: 'test123 ou vide',
           role: 'student',
-          description: 'Utilisateur principal de test avec données d\'exemple'
-        },
-        {
-          email: 'admin@example.com',
-          password: 'admin123',
-          role: 'admin',
-          description: 'Administrateur système'
-        },
-        {
-          email: 'etudiant@example.com',
-          password: 'etudiant123',
-          role: 'student',
-          description: 'Étudiant sans données'
+          description: 'Utilisateur de test avec données d\'exemple'
         }
       ],
       created: {

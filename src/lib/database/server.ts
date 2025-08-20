@@ -103,7 +103,7 @@ async function seedTestUser() {
       
       await db.insert(schema.users).values({
         id: testUserId,
-        email: 'test@example.com',
+        email: 'test@app.com',
         firstName: 'Utilisateur',
         lastName: 'Test',
         role: 'student',
@@ -113,7 +113,7 @@ async function seedTestUser() {
       
       console.log('✅ Utilisateur de test créé:', {
         id: testUserId,
-        email: 'test@example.com',
+        email: 'test@app.com',
         password: 'test123'
       });
     } else {

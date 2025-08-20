@@ -17,10 +17,20 @@ export default function CalendarPage() {
     <MainLayout user={user} onLogout={logout}>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">
-            {user.role === 'admin' ? 'Supervision des plannings' : 'Mon calendrier'}
-          </h1>
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                {user.role === 'admin' ? 'Supervision des plannings' : 'Mon calendrier'}
+              </h1>
+              <p className="text-gray-600">
+                {user.role === 'admin' 
+                  ? 'Gérez et supervisez les plannings' 
+                  : 'Visualisez vos événements et rendez-vous'
+                }
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Calendrier pour les étudiants, vue admin pour les admins */}

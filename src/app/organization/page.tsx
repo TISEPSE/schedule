@@ -92,12 +92,14 @@ export default function OrganizationPage() {
     return (
       <MainLayout user={user} onLogout={logout}>
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Structure de l&apos;application</h1>
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Structure de l&apos;application</h1>
+                <p className="text-gray-600">Gérez la structure et l&apos;organisation de l&apos;application</p>
+              </div>
+            </div>
             <div className="bg-gray-50 rounded-xl p-8 text-center">
-              <p className="text-gray-600">
-                Gérez la structure et l&apos;organisation de l&apos;application.
-              </p>
               <p className="text-sm text-gray-500 mt-2">
                 Fonctionnalités prévues : gestion des établissements, modération, statistiques...
               </p>

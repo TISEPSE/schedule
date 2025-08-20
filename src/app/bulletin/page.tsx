@@ -118,12 +118,14 @@ export default function BulletinPage() {
     return (
       <MainLayout user={user} onLogout={logout}>
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Gestion des bulletins</h1>
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Gestion des bulletins</h1>
+                <p className="text-gray-600">Consultez et gérez les bulletins de tous les étudiants</p>
+              </div>
+            </div>
             <div className="bg-gray-50 rounded-xl p-8 text-center">
-              <p className="text-gray-600">
-                Consultez et gérez les bulletins de tous les étudiants.
-              </p>
               <p className="text-sm text-gray-500 mt-2">
                 Fonctionnalités prévues : vue d&apos;ensemble, export PDF, statistiques générales...
               </p>
@@ -168,12 +170,14 @@ export default function BulletinPage() {
       <div className="space-y-6">
         
         {/* Header avec sélecteurs */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Mon bulletin</h1>
-              {displayData.student.name && (
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Mon bulletin</h1>
+              {displayData.student.name ? (
                 <p className="text-gray-600">{displayData.student.name} - {displayData.student.class}</p>
+              ) : (
+                <p className="text-gray-600">Consultez vos résultats scolaires et appréciations</p>
               )}
             </div>
             

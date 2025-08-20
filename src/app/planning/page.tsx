@@ -4,409 +4,382 @@ import { useAuth } from '@/context/AuthContext';
 import { redirect } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
 import { useState } from 'react';
-import { useTestUser } from '@/hooks/useTestUser';
+import { useApiData } from '@/hooks/useApiData';
 import { 
   ChevronLeft, 
   ChevronRight, 
-  Plus, 
-  Edit, 
-  Trash2, 
   Clock,
   MapPin,
-  User,
   BookOpen,
   AlertCircle,
   Calendar,
-  Filter
+  Filter,
+  CheckCircle,
+  Circle,
+  GraduationCap
 } from 'lucide-react';
 
-// Mock data pour le planning hebdomadaire
-const mockPlanningData = {
-  currentWeek: "Semaine du 15 au 21 Janvier 2024",
-  events: [
-    {
-      id: '1',
-      title: 'Mathématiques - Analyse',
-      type: 'course',
-      day: 'monday',
-      startTime: '08:00',
-      endTime: '10:00',
-      location: 'Salle 201',
-      teacher: 'M. Durand',
-      color: 'bg-blue-500',
-      description: 'Cours sur les limites et dérivées'
-    },
-    {
-      id: '2',
-      title: 'Physique - TP',
-      type: 'practical',
-      day: 'monday',
-      startTime: '10:15',
-      endTime: '12:15',
-      location: 'Laboratoire A',
-      teacher: 'Mme. Martin',
-      color: 'bg-green-500',
-      description: 'Travaux pratiques optique'
-    },
-    {
-      id: '3',
-      title: 'Français - Expression écrite',
-      type: 'course',
-      day: 'tuesday',
-      startTime: '08:00',
-      endTime: '09:00',
-      location: 'Salle 105',
-      teacher: 'M. Petit',
-      color: 'bg-purple-500',
-      description: 'Dissertation littéraire'
-    },
-    {
-      id: '4',
-      title: 'Contrôle Mathématiques',
-      type: 'exam',
-      day: 'tuesday',
-      startTime: '14:00',
-      endTime: '16:00',
-      location: 'Amphithéâtre',
-      teacher: 'M. Durand',
-      color: 'bg-red-500',
-      description: 'Évaluation sur les fonctions'
-    },
-    {
-      id: '5',
-      title: 'Anglais - Oral',
-      type: 'course',
-      day: 'wednesday',
-      startTime: '09:00',
-      endTime: '10:00',
-      location: 'Salle 302',
-      teacher: 'Mme. Smith',
-      color: 'bg-orange-500',
-      description: 'Présentation en anglais'
-    },
-    {
-      id: '6',
-      title: 'Projet Groupe - Soutenance',
-      type: 'project',
-      day: 'thursday',
-      startTime: '15:00',
-      endTime: '17:00',
-      location: 'Salle 210',
-      teacher: 'Mme. Dubois',
-      color: 'bg-teal-500',
-      description: 'Présentation projet économie'
-    },
-    {
-      id: '7',
-      title: 'Sport - Volleyball',
-      type: 'sport',
-      day: 'friday',
-      startTime: '08:00',
-      endTime: '10:00',
-      location: 'Gymnase',
-      teacher: 'M. Moreau',
-      color: 'bg-indigo-500',
-      description: 'Cours d\'éducation physique'
-    },
-    {
-      id: '8',
-      title: 'Révisions Physique',
-      type: 'study',
-      day: 'friday',
-      startTime: '14:00',
-      endTime: '16:00',
-      location: 'Bibliothèque',
-      teacher: 'Autonome',
-      color: 'bg-gray-500',
-      description: 'Travail personnel'
-    }
-  ]
+// Types pour les filtres
+type FilterType = 'all' | 'courses' | 'assignments' | 'exams';
+
+interface WeeklyItem {
+  id: string;
+  title: string;
+  type: 'course' | 'practical' | 'exam' | 'assignment';
+  day: string;
+  startTime?: string;
+  endTime?: string;
+  dueTime?: string;
+  location?: string;
+  subject?: string;
+  description: string;
+  color: string;
+  borderColor: string;
+  bgColor: string;
+  completed?: boolean;
+  priority?: 'low' | 'medium' | 'high';
+}
+
+const getItemColors = (type: string, priority?: string) => {
+  const colorMaps: Record<string, { color: string; borderColor: string; bgColor: string }> = {
+    course: { color: 'bg-blue-600', borderColor: 'border-l-blue-600', bgColor: 'bg-blue-100' },
+    practical: { color: 'bg-emerald-600', borderColor: 'border-l-emerald-600', bgColor: 'bg-emerald-100' }, 
+    exam: { color: 'bg-red-600', borderColor: 'border-l-red-600', bgColor: 'bg-red-100' },
+    assignment: priority === 'high' 
+      ? { color: 'bg-orange-600', borderColor: 'border-l-orange-600', bgColor: 'bg-orange-100' }
+      : priority === 'low' 
+        ? { color: 'bg-slate-600', borderColor: 'border-l-slate-600', bgColor: 'bg-slate-100' }
+        : { color: 'bg-amber-600', borderColor: 'border-l-amber-600', bgColor: 'bg-amber-100' }
+  };
+  return colorMaps[type] || { color: 'bg-slate-600', borderColor: 'border-l-slate-600', bgColor: 'bg-slate-100' };
 };
 
-const daysOfWeek = [
-  { key: 'monday', label: 'Lundi', shortLabel: 'Lun' },
-  { key: 'tuesday', label: 'Mardi', shortLabel: 'Mar' },
-  { key: 'wednesday', label: 'Mercredi', shortLabel: 'Mer' },
-  { key: 'thursday', label: 'Jeudi', shortLabel: 'Jeu' },
-  { key: 'friday', label: 'Vendredi', shortLabel: 'Ven' },
-  { key: 'saturday', label: 'Samedi', shortLabel: 'Sam' },
-  { key: 'sunday', label: 'Dimanche', shortLabel: 'Dim' }
-];
-
-const typeLabels: Record<string, string> = {
-  course: 'Cours',
-  practical: 'TP',
-  exam: 'Contrôle',
-  project: 'Projet', 
-  sport: 'Sport',
-  study: 'Révision'
-};
-
-const typeIcons: Record<string, React.ComponentType<{className?: string}>> = {
-  course: BookOpen,
-  practical: AlertCircle,
-  exam: AlertCircle,
-  project: User,
-  sport: User,
-  study: BookOpen
+const getDayName = (date: Date) => {
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  return days[date.getDay()];
 };
 
 export default function PlanningPage() {
   const { user, logout } = useAuth();
-  const [selectedFilter, setSelectedFilter] = useState('all');
-  const { isTestUser } = useTestUser(user);
+  const { events, assignments, createEvent, createAssignment, updateAssignment } = useApiData(user?.id || '');
+  const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   if (!user) {
     redirect('/');
+    return null;
   }
 
-  // Utilisateur test : interface normale mais données vides (sera géré par le composant)
+  // Calculer les dates de la semaine (lundi à dimanche)
+  const getWeekDates = (date: Date) => {
+    const week = [];
+    const startOfWeek = new Date(date);
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Lundi = 1
+    startOfWeek.setDate(diff);
 
-  if (user.role === 'admin') {
-    return (
-      <MainLayout user={user} onLogout={logout}>
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Gestion des plannings</h1>
-            <div className="bg-gray-50 rounded-xl p-8 text-center">
-              <p className="text-gray-600">
-                Gérez les plannings de tous les étudiants et créez de nouveaux événements.
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                Fonctionnalités prévues : création d&apos;événements, gestion globale, templates...
-              </p>
-            </div>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  const getEventsForDay = (day: string) => {
-    // Utilisateur test : renvoyer liste vide
-    if (isTestUser) {
-      return [];
+    for (let i = 0; i < 7; i++) {
+      const weekDay = new Date(startOfWeek);
+      weekDay.setDate(startOfWeek.getDate() + i);
+      week.push(weekDay);
     }
-    return mockPlanningData.events.filter(event => 
-      event.day === day && (selectedFilter === 'all' || event.type === selectedFilter)
-    ).sort((a, b) => a.startTime.localeCompare(b.startTime));
+    return week;
   };
 
-  const formatTime = (time: string) => {
-    return time;
+  const weekDates = getWeekDates(currentWeek);
+  const weekStart = weekDates[0];
+  const weekEnd = weekDates[6];
+
+  // Convertir events et assignments en format unifié
+  const weeklyItems: WeeklyItem[] = [
+    // Événements (cours, examens, etc.)
+    ...events
+      .filter(event => {
+        const eventDate = new Date(event.startTime);
+        return eventDate >= weekStart && eventDate <= weekEnd;
+      })
+      .map(event => {
+        const colors = getItemColors(event.type);
+        return {
+          id: event.id,
+          title: event.title,
+          type: event.type,
+          day: getDayName(new Date(event.startTime)),
+          startTime: new Date(event.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+          endTime: new Date(event.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+          location: event.location,
+          description: event.description,
+          color: colors.color,
+          borderColor: colors.borderColor,
+          bgColor: colors.bgColor
+        };
+      }),
+    // Devoirs
+    ...assignments
+      .filter(assignment => {
+        const dueDate = new Date(assignment.dueDate);
+        return dueDate >= weekStart && dueDate <= weekEnd;
+      })
+      .map(assignment => {
+        const colors = getItemColors('assignment', assignment.priority);
+        return {
+          id: assignment.id,
+          title: assignment.title,
+          type: 'assignment' as const,
+          day: getDayName(new Date(assignment.dueDate)),
+          dueTime: new Date(assignment.dueDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+          subject: assignment.subject,
+          description: assignment.description,
+          color: colors.color,
+          borderColor: colors.borderColor,
+          bgColor: colors.bgColor,
+          completed: assignment.completed,
+          priority: assignment.priority
+        };
+      })
+  ];
+
+  // Filtrer les éléments selon le filtre actif
+  const filteredItems = weeklyItems.filter(item => {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'courses') return ['course', 'practical'].includes(item.type);
+    if (activeFilter === 'assignments') return item.type === 'assignment';
+    if (activeFilter === 'exams') return item.type === 'exam';
+    return true;
+  });
+
+  // Grouper par jour
+  const itemsByDay = filteredItems.reduce((acc, item) => {
+    if (!acc[item.day]) acc[item.day] = [];
+    acc[item.day].push(item);
+    return acc;
+  }, {} as Record<string, WeeklyItem[]>);
+
+  // Trier les éléments de chaque jour par heure
+  Object.keys(itemsByDay).forEach(day => {
+    itemsByDay[day].sort((a, b) => {
+      const timeA = a.startTime || a.dueTime || '00:00';
+      const timeB = b.startTime || b.dueTime || '00:00';
+      return timeA.localeCompare(timeB);
+    });
+  });
+
+  const navigateWeek = (direction: 'prev' | 'next') => {
+    const newWeek = new Date(currentWeek);
+    newWeek.setDate(currentWeek.getDate() + (direction === 'next' ? 7 : -7));
+    setCurrentWeek(newWeek);
   };
 
-  const getDayDate = (dayKey: string) => {
-    const dates: Record<string, string> = {
-      monday: '15',
-      tuesday: '16', 
-      wednesday: '17',
-      thursday: '18',
-      friday: '19',
-      saturday: '20',
-      sunday: '21'
-    };
-    return dates[dayKey] || '';
+  const handleAssignmentToggle = async (assignment: WeeklyItem) => {
+    if (assignment.type === 'assignment') {
+      const originalAssignment = assignments.find(a => a.id === assignment.id);
+      if (originalAssignment) {
+        await updateAssignment({
+          ...originalAssignment,
+          completed: !originalAssignment.completed
+        });
+      }
+    }
   };
+
+  const dayNames = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+  const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+  const filters = [
+    { key: 'all', label: 'Tous', icon: Calendar },
+    { key: 'courses', label: 'Cours', icon: GraduationCap },
+    { key: 'assignments', label: 'Devoirs', icon: BookOpen },
+    { key: 'exams', label: 'Examens', icon: AlertCircle }
+  ];
 
   return (
     <MainLayout user={user} onLogout={logout}>
       <div className="space-y-6">
         
-        {/* Header avec navigation et filtres */}
+        {/* Header avec navigation et filtres - Consistent avec les autres pages */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Mon planning</h1>
-              <p className="text-gray-600">{mockPlanningData.currentWeek}</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Emploi du temps</h1>
+              <p className="text-gray-600">Vue hebdomadaire de vos cours et devoirs</p>
             </div>
             
-            <div className="flex items-center space-x-4">
-              {/* Navigation semaine */}
-              <div className="flex items-center space-x-2">
-                <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <button className="px-4 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
-                  Semaine actuelle
-                </button>
-                <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                  <ChevronRight className="h-5 w-5" />
-                </button>
+            {/* Navigation semaine */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => navigateWeek('prev')}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <div className="px-4 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg font-medium">
+                Semaine du {weekStart.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} au{' '}
+                {weekEnd.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
               </div>
-
-              {/* Bouton ajouter */}
-              <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors">
-                <Plus className="h-4 w-4" />
-                <span>Nouvel événement</span>
+              <button
+                onClick={() => navigateWeek('next')}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ChevronRight className="h-5 w-5" />
               </button>
             </div>
           </div>
 
-          {/* Filtres */}
+          {/* Filtres - Amélioration du design */}
           <div className="flex items-center space-x-2">
             <Filter className="h-5 w-5 text-gray-500" />
             <div className="flex space-x-2">
-              <button 
-                onClick={() => setSelectedFilter('all')}
-                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                  selectedFilter === 'all' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                Tout
-              </button>
-              <button 
-                onClick={() => setSelectedFilter('course')}
-                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                  selectedFilter === 'course' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                Cours
-              </button>
-              <button 
-                onClick={() => setSelectedFilter('exam')}
-                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                  selectedFilter === 'exam' ? 'bg-red-100 text-red-700' : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                Contrôles
-              </button>
-              <button 
-                onClick={() => setSelectedFilter('project')}
-                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                  selectedFilter === 'project' ? 'bg-teal-100 text-teal-700' : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                Projets
-              </button>
+              {filters.map((filter) => {
+                const IconComponent = filter.icon;
+                return (
+                  <button
+                    key={filter.key}
+                    onClick={() => setActiveFilter(filter.key as FilterType)}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeFilter === filter.key 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <IconComponent className="h-4 w-4" />
+                    <span>{filter.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* Vue planning hebdomadaire */}
+        {/* Vue hebdomadaire - Design amélioré */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
-            
-            {daysOfWeek.map((day) => {
-              const dayEvents = getEventsForDay(day.key);
-              const isWeekend = day.key === 'saturday' || day.key === 'sunday';
-              
+            {dayKeys.map((dayKey, index) => {
+              const dayItems = itemsByDay[dayKey] || [];
+              const dayDate = weekDates[index];
+              const isToday = dayDate.toDateString() === new Date().toDateString();
+              const isWeekend = dayKey === 'saturday' || dayKey === 'sunday';
+
               return (
-                <div key={day.key} className={`${isWeekend ? 'opacity-60' : ''}`}>
-                  {/* Header du jour */}
+                <div 
+                  key={dayKey} 
+                  className={`${isWeekend ? 'opacity-60' : ''} ${isToday ? 'ring-2 ring-blue-100' : ''} rounded-xl`}
+                >
+                  {/* Header du jour - Style uniforme */}
                   <div className="text-center mb-4 pb-3 border-b border-gray-200">
-                    <div className="font-semibold text-gray-900 mb-1">{day.label}</div>
-                    <div className={`text-2xl font-bold w-10 h-10 mx-auto rounded-full flex items-center justify-center ${
-                      day.key === 'tuesday' ? 'bg-blue-500 text-white' : 'text-gray-600'
+                    <div className="font-semibold text-gray-900 mb-2">{dayNames[index]}</div>
+                    <div className={`text-2xl font-bold w-10 h-10 mx-auto rounded-full flex items-center justify-center transition-colors ${
+                      isToday 
+                        ? 'bg-blue-500 text-white shadow-md' 
+                        : 'text-gray-600 bg-gray-100 hover:bg-gray-200'
                     }`}>
-                      {getDayDate(day.key)}
+                      {dayDate.getDate()}
                     </div>
                   </div>
 
-                  {/* Événements du jour */}
-                  <div className="space-y-2">
-                    {dayEvents.length === 0 ? (
-                      <div className="p-4 text-center text-gray-500 bg-gray-50 rounded-lg">
-                        <Calendar className="h-6 w-6 mx-auto mb-2 text-gray-400" />
-                        <p className="text-sm">Aucun événement</p>
+                  {/* Éléments du jour */}
+                  <div className="space-y-4 min-h-[300px]">
+                    {dayItems.length === 0 ? (
+                      <div className="p-6 text-center text-gray-500 bg-gray-50 rounded-xl">
+                        <Calendar className="h-8 w-8 mx-auto mb-3 text-gray-400" />
+                        <p className="text-sm font-medium">Aucun élément</p>
+                        <p className="text-xs text-gray-400 mt-1">Journée libre</p>
                       </div>
                     ) : (
-                      dayEvents.map((event) => {
-                        const IconComponent = typeIcons[event.type];
-                        return (
-                          <div key={event.id} className={`${event.color} rounded-lg p-3 text-white shadow-sm group relative`}>
-                            {/* Contenu de l'événement */}
-                            <div className="mb-2">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <IconComponent className="h-4 w-4" />
-                                <span className="text-xs font-medium uppercase tracking-wide opacity-90">
-                                  {typeLabels[event.type]}
+                      dayItems.map(item => (
+                        <div
+                          key={item.id}
+                          className={`p-4 rounded-xl ${item.bgColor} hover:shadow-md transition-all duration-200 cursor-pointer group border border-gray-200`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center space-x-2 mb-2">
+                                {item.type === 'assignment' && (
+                                  <button
+                                    onClick={() => handleAssignmentToggle(item)}
+                                    className="flex-shrink-0 hover:scale-110 transition-transform"
+                                  >
+                                    {item.completed ? (
+                                      <CheckCircle className="h-5 w-5 text-green-600" />
+                                    ) : (
+                                      <Circle className="h-5 w-5 text-gray-400" />
+                                    )}
+                                  </button>
+                                )}
+                                <h4 className={`font-semibold text-sm leading-tight ${
+                                  item.completed ? 'line-through text-gray-500' : 'text-gray-900'
+                                }`}>
+                                  {item.title}
+                                </h4>
+                              </div>
+                              
+                              <div className="space-y-2 text-xs text-gray-600 mb-3">
+                                <div className="flex items-center space-x-2">
+                                  <Clock className="h-3 w-3 flex-shrink-0" />
+                                  <span className="font-medium">
+                                    {item.type === 'assignment'
+                                      ? `À rendre pour ${item.dueTime}`
+                                      : `${item.startTime} - ${item.endTime}`
+                                    }
+                                  </span>
+                                </div>
+                                
+                                {item.location && (
+                                  <div className="flex items-center space-x-2">
+                                    <MapPin className="h-3 w-3 flex-shrink-0" />
+                                    <span className="truncate">{item.location}</span>
+                                  </div>
+                                )}
+                                
+                                {item.subject && (
+                                  <div className="flex items-center space-x-2">
+                                    <BookOpen className="h-3 w-3 flex-shrink-0" />
+                                    <span className="truncate font-medium">{item.subject}</span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {item.description && (
+                                <p className="text-xs text-gray-500 mb-3 line-clamp-2">{item.description}</p>
+                              )}
+                              
+                              {item.priority && item.type === 'assignment' && (
+                                <span className={`inline-block px-2 py-1 text-xs rounded-full font-medium ${
+                                  item.priority === 'high' ? 'bg-red-100 text-red-700' :
+                                  item.priority === 'low' ? 'bg-gray-100 text-gray-700' :
+                                  'bg-yellow-100 text-yellow-700'
+                                }`}>
+                                  {item.priority === 'high' ? 'Priorité haute' :
+                                   item.priority === 'low' ? 'Priorité basse' : 'Priorité normale'}
                                 </span>
-                              </div>
-                              <h3 className="font-semibold text-sm leading-tight">{event.title}</h3>
+                              )}
                             </div>
-
-                            {/* Informations détaillées */}
-                            <div className="space-y-1 text-xs opacity-90">
-                              <div className="flex items-center space-x-1">
-                                <Clock className="h-3 w-3" />
-                                <span>{formatTime(event.startTime)} - {formatTime(event.endTime)}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <MapPin className="h-3 w-3" />
-                                <span>{event.location}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <User className="h-3 w-3" />
-                                <span>{event.teacher}</span>
-                              </div>
-                            </div>
-
-                            {/* Boutons d'action */}
-                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
-                              <button 
-                                className="p-1 bg-white/20 hover:bg-white/30 rounded transition-colors"
-                                title="Modifier"
-                              >
-                                <Edit className="h-3 w-3" />
-                              </button>
-                              <button 
-                                className="p-1 bg-white/20 hover:bg-red-500 rounded transition-colors"
-                                title="Supprimer"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </button>
-                            </div>
-
-                            {/* Description (au survol) */}
-                            {event.description && (
-                              <div className="absolute bottom-full left-0 right-0 mb-2 p-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
-                                {event.description}
-                              </div>
-                            )}
                           </div>
-                        );
-                      })
+                        </div>
+                      ))
                     )}
                   </div>
                 </div>
               );
             })}
-
           </div>
+
+          {/* Message vide global - Amélioration du design */}
+          {filteredItems.length === 0 && (
+            <div className="text-center py-16">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Calendar className="h-10 w-10 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Aucun élément cette semaine</h3>
+              <p className="text-gray-600 text-lg">
+                {activeFilter === 'all' 
+                  ? 'Votre emploi du temps est vide pour cette semaine.'
+                  : `Aucun ${filters.find(f => f.key === activeFilter)?.label.toLowerCase()} trouvé cette semaine.`
+                }
+              </p>
+              <p className="text-gray-500 text-sm mt-2">Profitez de ce temps libre pour vous reposer ou étudier !</p>
+            </div>
+          )}
         </div>
-
-        {/* Statistiques de la semaine */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-blue-50 rounded-2xl p-6 text-center">
-            <div className="text-2xl font-bold text-blue-600 mb-1">
-              {mockPlanningData.events.filter(e => e.type === 'course').length}
-            </div>
-            <div className="text-sm font-medium text-blue-700">Cours cette semaine</div>
-          </div>
-          
-          <div className="bg-red-50 rounded-2xl p-6 text-center">
-            <div className="text-2xl font-bold text-red-600 mb-1">
-              {mockPlanningData.events.filter(e => e.type === 'exam').length}
-            </div>
-            <div className="text-sm font-medium text-red-700">Contrôles à venir</div>
-          </div>
-          
-          <div className="bg-green-50 rounded-2xl p-6 text-center">
-            <div className="text-2xl font-bold text-green-600 mb-1">
-              {mockPlanningData.events.filter(e => e.type === 'practical').length}
-            </div>
-            <div className="text-sm font-medium text-green-700">Travaux pratiques</div>
-          </div>
-          
-          <div className="bg-purple-50 rounded-2xl p-6 text-center">
-            <div className="text-2xl font-bold text-purple-600 mb-1">
-              {mockPlanningData.events.length}
-            </div>
-            <div className="text-sm font-medium text-purple-700">Total événements</div>
-          </div>
-        </div>
-
       </div>
     </MainLayout>
   );

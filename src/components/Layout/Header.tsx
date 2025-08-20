@@ -5,41 +5,8 @@ import { Bell, Search, LogOut, X, CheckCircle, AlertCircle, Info } from 'lucide-
 import { User } from '@/types';
 import Image from 'next/image';
 
-// Mock notifications data
-const mockNotifications = [
-  {
-    id: '1',
-    type: 'info',
-    title: 'Nouveau cours ajouté',
-    message: 'Le cours de Mathématiques de demain a été ajouté à votre planning',
-    time: '5 min',
-    read: false
-  },
-  {
-    id: '2',
-    type: 'warning',
-    title: 'Changement d\'horaire',
-    message: 'Le cours de Physique est déplacé à 14h au lieu de 15h',
-    time: '1h',
-    read: false
-  },
-  {
-    id: '3',
-    type: 'success',
-    title: 'Devoir rendu',
-    message: 'Votre devoir de Français a été soumis avec succès',
-    time: '2h',
-    read: true
-  },
-  {
-    id: '4',
-    type: 'info',
-    title: 'Nouvelle personne ajoutée',
-    message: 'Sophie Chen a rejoint votre classe',
-    time: '1j',
-    read: true
-  }
-];
+// Mock notifications data - vide par défaut
+const mockNotifications: any[] = [];
 
 interface HeaderProps {
   user: User;

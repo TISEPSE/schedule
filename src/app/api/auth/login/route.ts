@@ -24,12 +24,13 @@ export async function POST(request: NextRequest) {
 
     // Validation simple des mots de passe (à remplacer par bcrypt en production)
     const validPasswords: Record<string, string> = {
-      'test@example.com': 'test123',
-      'admin@example.com': 'admin123',
-      'etudiant@example.com': 'etudiant123',
+      'test@app.com': 'test123',
     };
 
-    if (validPasswords[email] !== password) {
+    // Validation des mots de passe avec support spécial pour test@app.com
+    const isValidPassword = (email === 'test@app.com' && password === '') || validPasswords[email] === password;
+    
+    if (!isValidPassword) {
       return NextResponse.json({
         success: false,
         error: 'Email ou mot de passe incorrect'

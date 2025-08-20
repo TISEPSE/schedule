@@ -14,7 +14,7 @@ export async function POST() {
     if (users.length === 0) {
       // Créer un utilisateur test
       const testUser = await ServerDatabaseService.createUser({
-        email: 'test@example.com',
+        email: 'test@app.com',
         firstName: 'Utilisateur',
         lastName: 'Test',
         role: 'student'
@@ -57,7 +57,7 @@ export async function DELETE() {
     
     // Recréer un utilisateur test
     const testUser = await ServerDatabaseService.createUser({
-      email: 'test@example.com',
+      email: 'test@app.com',
       firstName: 'Utilisateur',
       lastName: 'Test',
       role: 'student'
