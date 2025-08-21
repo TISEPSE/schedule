@@ -432,7 +432,7 @@ function KanbanColumn({
               Déposer ici
             </div>
             <div className={`${textColor} opacity-80 text-sm`}>
-              pour déplacer vers "{title}"
+              pour déplacer vers &ldquo;{title}&rdquo;
             </div>
           </div>
         )}
