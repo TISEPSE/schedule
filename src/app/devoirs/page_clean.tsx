@@ -1,1 +1,0 @@
-// Ce fichier a été supprimé - utilisez page.tsx à la place
