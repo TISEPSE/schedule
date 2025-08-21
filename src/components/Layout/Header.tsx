@@ -93,7 +93,7 @@ export default function Header({ user, onLogout }: HeaderProps) {
             {/* Dropdown des notifications */}
             {showNotifications && (
               <div 
-                className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 focus:outline-none"
+                className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-40 focus:outline-none"
                 tabIndex={-1}
                 autoFocus
               >

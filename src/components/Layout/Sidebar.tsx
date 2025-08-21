@@ -38,7 +38,7 @@ const studentNavItems = [
   { icon: Calendar, label: 'Mon emploi du temps', href: '/planning' },
   { icon: CalendarDays, label: 'Mon calendrier', href: '/calendar' },
   { icon: FileText, label: 'Mon bulletin', href: '/bulletin' },
-  { icon: Trello, label: 'Kanban Board', href: '/devoirs' },
+  { icon: Trello, label: 'Mes devoirs', href: '/devoirs' },
   { icon: Building, label: 'Mon école', href: '/organization' },
   { icon: Users, label: 'Ma classe', href: '/classes' },
   { icon: Settings, label: 'Paramètres', href: '/settings' },
@@ -51,7 +51,7 @@ export default function Sidebar({ userRole, isCollapsed, onToggle }: SidebarProp
   const [clickedPath, setClickedPath] = useState<string | null>(null);
   const navItems = userRole === 'admin' ? adminNavItems : studentNavItems;
   
-  // Forcer la mise à jour du path actuel
+  // Forcer la mise à jour du path
   useEffect(() => {
     setCurrentPath(pathname);
     // Réinitialiser le path cliqué quand la navigation est terminée
@@ -107,10 +107,13 @@ export default function Sidebar({ userRole, isCollapsed, onToggle }: SidebarProp
       <nav className={`${isCollapsed ? 'p-2' : 'p-4'} space-y-3`}>
         {navItems.map((item) => {
           const Icon = item.icon;
-          // Retirer le slash final du pathname pour la comparaison
-          const normalizedPath = currentPath.endsWith('/') && currentPath !== '/' ? currentPath.slice(0, -1) : currentPath;
-          // Utiliser le path cliqué en priorité pour un effet instantané
-          const isActive = clickedPath === item.href || (clickedPath === null && normalizedPath === item.href);
+          // Détecter si c'est la page active - prioriser le clic pour feedback instantané
+          const isActive = clickedPath === item.href || 
+                           (clickedPath === null && (
+                             currentPath === item.href || 
+                             (currentPath.startsWith(item.href) && item.href !== '/') ||
+                             (item.href === '/dashboard' && currentPath === '/')
+                           ));
           
           return (
             <Link
@@ -123,7 +126,7 @@ export default function Sidebar({ userRole, isCollapsed, onToggle }: SidebarProp
                   : 'space-x-3 px-4 py-3'
               } ${
                 isActive
-                  ? 'bg-blue-500 text-white shadow-md'
+                  ? 'bg-blue-600 text-white font-semibold'
                   : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
               }`}
               title={isCollapsed ? item.label : ''}

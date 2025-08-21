@@ -46,6 +46,7 @@ export const assignments = sqliteTable('assignments', {
   dueDate: integer('due_date', { mode: 'timestamp' }).notNull(),
   completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
   priority: text('priority', { enum: ['low', 'medium', 'high'] }).notNull().default('medium'),
+  forcedColumn: text('forced_column', { enum: ['todo', 'inProgress', 'review', 'completed'] }),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });

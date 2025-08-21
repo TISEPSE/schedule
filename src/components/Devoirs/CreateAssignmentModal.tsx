@@ -60,9 +60,10 @@ export default function CreateAssignmentModal({ isOpen, onClose, onSubmit }: Cre
     if (!formData.dueDate) {
       newErrors.dueDate = 'L\'échéance est requise';
     } else {
-      const dueDate = new Date(formData.dueDate);
-      const now = new Date();
-      if (dueDate < now) {
+      const dueDate = new Date(formData.dueDate + 'T23:59:59');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (dueDate < today) {
         newErrors.dueDate = 'L\'échéance ne peut pas être dans le passé';
       }
     }
@@ -78,7 +79,8 @@ export default function CreateAssignmentModal({ isOpen, onClose, onSubmit }: Cre
     
     setIsSubmitting(true);
     try {
-      const dueDate = new Date(formData.dueDate);
+      // Définir l'heure à 23:59:59 pour la fin de journée
+      const dueDate = new Date(formData.dueDate + 'T23:59:59');
       
       await onSubmit({
         ...formData,
@@ -122,7 +124,7 @@ export default function CreateAssignmentModal({ isOpen, onClose, onSubmit }: Cre
       <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl border border-gray-100 overflow-hidden" onClick={(e) => e.stopPropagation()}>
         
         {/* Header coloré */}
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-black/5"></div>
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -232,16 +234,16 @@ export default function CreateAssignmentModal({ isOpen, onClose, onSubmit }: Cre
           <div>
             <label className="flex items-center space-x-2 text-sm font-semibold text-gray-900 mb-3">
               <Calendar className="h-4 w-4 text-green-500" />
-              <span>Date et heure d&apos;échéance *</span>
+              <span>Date d&apos;échéance *</span>
             </label>
             <input
-              type="datetime-local"
-              value={formData.dueDate}
+              type="date"
+              value={formData.dueDate.split('T')[0]}
               onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
               className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 text-gray-500 ${
                 errors.dueDate ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
               }`}
-              min={new Date().toISOString().slice(0, 16)}
+              min={new Date().toISOString().slice(0, 10)}
             />
             {errors.dueDate && (
               <p className="mt-2 text-sm text-red-600 flex items-center space-x-1">
@@ -279,7 +281,7 @@ export default function CreateAssignmentModal({ isOpen, onClose, onSubmit }: Cre
             <button
               type="submit"
               disabled={isSubmitting || !formData.title || !formData.subject || !formData.dueDate}
-              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:cursor-not-allowed"
+              className="flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>

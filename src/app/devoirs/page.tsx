@@ -3,7 +3,7 @@
 import { useAuth } from '@/context/AuthContext';
 import { redirect } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApiData } from '@/hooks/useApiData';
 import { 
   Plus, 
@@ -29,14 +29,69 @@ interface Assignment {
   priority: 'low' | 'medium' | 'high';
   createdAt: Date;
   updatedAt: Date;
+  forcedColumn?: 'todo' | 'inProgress' | 'review' | 'completed';
 }
 
 export default function DevoirsPage() {
   const { user, logout } = useAuth();
   const { assignments, updateAssignment, createAssignment } = useApiData(user?.id || '');
+  
+  // État local pour l'affichage immédiat du drag and drop
+  const [localAssignments, setLocalAssignments] = useState<Assignment[]>([]);
+  const [pendingUpdates, setPendingUpdates] = useState<Map<string, Assignment>>(new Map());
+  // État persistant pour forcer les colonnes (pas sauvegardé en DB)
+  const [forcedColumns, setForcedColumns] = useState<Map<string, string>>(new Map());
+  
+  // Synchroniser l'état local avec les assignments du serveur
+  // Mais préserver les changements locaux en attente
+  useEffect(() => {
+    // Si on a des modifications locales en attente, on préserve ces versions
+    const updatedAssignments = assignments.map(serverAssignment => {
+      const pendingUpdate = pendingUpdates.get(serverAssignment.id);
+      if (pendingUpdate) {
+        // Garder la version locale modifiée
+        return pendingUpdate;
+      }
+      return serverAssignment;
+    });
+    setLocalAssignments(updatedAssignments);
+  }, [assignments, pendingUpdates]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [draggedItem, setDraggedItem] = useState<Assignment | null>(null);
+
+  // Synchronisation différée des mises à jour
+  useEffect(() => {
+    if (pendingUpdates.size > 0) {
+      const timer = setTimeout(async () => {
+        console.log('🔄 Synchronisation différée de', pendingUpdates.size, 'éléments');
+        
+        // Copier la map des updates avant de la vider
+        const updatesToSync = new Map(pendingUpdates);
+        
+        // Vider immédiatement la queue pour éviter les doublons
+        setPendingUpdates(new Map());
+        
+        // Synchroniser tous les éléments en attente
+        try {
+          await Promise.all(
+            Array.from(updatesToSync.values()).map(assignment => 
+              updateAssignment(assignment).catch(err => 
+                console.error('Erreur sync:', assignment.id, err)
+              )
+            )
+          );
+          console.log('✅ Synchronisation différée terminée');
+        } catch (error) {
+          console.error('Erreur lors de la synchronisation:', error);
+          // En cas d'erreur, remettre les updates dans la queue
+          setPendingUpdates(prev => new Map([...prev, ...updatesToSync]));
+        }
+      }, 1000); // Délai de 1 seconde
+
+      return () => clearTimeout(timer);
+    }
+  }, [pendingUpdates, updateAssignment]);
 
   if (!user) {
     redirect('/');
@@ -64,7 +119,7 @@ export default function DevoirsPage() {
 
   // Fonction pour filtrer les devoirs
   const getFilteredAssignments = () => {
-    let filtered = assignments;
+    let filtered = localAssignments;
 
     // Recherche
     if (searchTerm) {
@@ -87,11 +142,35 @@ export default function DevoirsPage() {
     return daysDiff <= 3 && daysDiff > 1 && assignment.priority !== 'low';
   }
 
+  // Fonction pour déterminer la colonne d'un devoir
+  const getAssignmentColumn = (assignment: Assignment): 'todo' | 'inProgress' | 'review' | 'completed' => {
+    // Si une colonne est forcée localement, on l'utilise
+    const forcedColumn = forcedColumns.get(assignment.id);
+    if (forcedColumn) {
+      return forcedColumn as 'todo' | 'inProgress' | 'review' | 'completed';
+    }
+    
+    // Sinon, on utilise la logique automatique
+    if (assignment.completed) {
+      return 'completed';
+    } else if (isInProgress(assignment)) {
+      return 'inProgress';
+    } else {
+      const now = new Date();
+      const dueDate = new Date(assignment.dueDate);
+      const daysDiff = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysDiff <= 1 && daysDiff >= 0) {
+        return 'review';
+      }
+      return 'todo';
+    }
+  };
+
   // Groupement pour le kanban board avec design cohérent et backgrounds complets
   const kanbanColumns = {
     todo: {
       title: '📝 À faire',
-      items: filteredAssignments.filter(a => !a.completed && !isInProgress(a)),
+      items: filteredAssignments.filter(a => getAssignmentColumn(a) === 'todo'),
       lightBg: 'bg-blue-100/80',
       headerBg: 'bg-blue-500/90',
       border: 'border-blue-200/40',
@@ -101,7 +180,7 @@ export default function DevoirsPage() {
     },
     inProgress: {
       title: 'En cours',
-      items: filteredAssignments.filter(a => !a.completed && isInProgress(a)),
+      items: filteredAssignments.filter(a => getAssignmentColumn(a) === 'inProgress'),
       lightBg: 'bg-amber-100/80',
       headerBg: 'bg-amber-500/90',
       border: 'border-amber-200/40',
@@ -111,12 +190,7 @@ export default function DevoirsPage() {
     },
     review: {
       title: 'À vérifier',
-      items: filteredAssignments.filter(a => {
-        const now = new Date();
-        const dueDate = new Date(a.dueDate);
-        const daysDiff = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        return !a.completed && daysDiff <= 1 && daysDiff >= 0;
-      }),
+      items: filteredAssignments.filter(a => getAssignmentColumn(a) === 'review'),
       lightBg: 'bg-purple-100/80',
       headerBg: 'bg-purple-500/90',
       border: 'border-purple-200/40',
@@ -126,7 +200,7 @@ export default function DevoirsPage() {
     },
     completed: {
       title: 'Terminé',
-      items: filteredAssignments.filter(a => a.completed),
+      items: filteredAssignments.filter(a => getAssignmentColumn(a) === 'completed'),
       lightBg: 'bg-emerald-100/80',
       headerBg: 'bg-emerald-500/90',
       border: 'border-emerald-200/40',
@@ -166,14 +240,40 @@ export default function DevoirsPage() {
     }
   };
 
-  const toggleCompletion = async (assignmentId: string) => {
-    const assignment = assignments.find(a => a.id === assignmentId);
-    if (assignment) {
-      await updateAssignment({
-        ...assignment,
-        completed: !assignment.completed
-      });
-    }
+  const toggleCompletion = (assignmentId: string) => {
+    const assignment = localAssignments.find(a => a.id === assignmentId);
+    if (!assignment) return;
+
+    const newCompleted = !assignment.completed;
+    
+    // Forcer la colonne selon le statut completed
+    setForcedColumns(prev => {
+      const newMap = new Map(prev);
+      if (newCompleted) {
+        newMap.set(assignmentId, 'completed');
+      } else {
+        // Retirer le forçage pour laisser la logique automatique
+        newMap.delete(assignmentId);
+      }
+      return newMap;
+    });
+
+    const updatedAssignment: Assignment = {
+      ...assignment,
+      completed: newCompleted
+    };
+
+    // Mise à jour locale immédiate
+    setLocalAssignments(prev => 
+      prev.map(a => a.id === assignmentId ? updatedAssignment : a)
+    );
+
+    // Ajouter à la queue de synchronisation
+    setPendingUpdates(prev => {
+      const newMap = new Map(prev);
+      newMap.set(assignmentId, updatedAssignment);
+      return newMap;
+    });
   };
 
   // Fonctions pour le drag & drop
@@ -185,21 +285,57 @@ export default function DevoirsPage() {
     setDraggedItem(null);
   };
 
-  const handleDrop = async (targetColumn: string) => {
+  const handleDrop = (targetColumn: string) => {
     if (!draggedItem) return;
 
-    let completed = false;
-
-    // Déterminer le nouveau statut en fonction de la colonne
-    if (targetColumn === 'completed') {
-      completed = true;
+    const currentColumn = getAssignmentColumn(draggedItem);
+    
+    // Si on déplace vers la même colonne, pas besoin de mettre à jour
+    if (currentColumn === targetColumn) {
+      setDraggedItem(null);
+      return;
     }
 
-    // Mettre à jour le devoir
-    if (draggedItem.completed !== completed) {
-      await updateAssignment({
+    // 1. FORCER LA COLONNE LOCALEMENT (ultra-rapide, persistant)
+    setForcedColumns(prev => {
+      const newMap = new Map(prev);
+      newMap.set(draggedItem.id, targetColumn);
+      return newMap;
+    });
+
+    // 2. METTRE À JOUR SEULEMENT completed SI NÉCESSAIRE
+    if (targetColumn === 'completed' && !draggedItem.completed) {
+      const updatedAssignment: Assignment = { 
         ...draggedItem,
-        completed: completed
+        completed: true
+      };
+
+      // Mettre à jour l'état local immédiatement
+      setLocalAssignments(prev => 
+        prev.map(a => a.id === draggedItem.id ? updatedAssignment : a)
+      );
+
+      // Ajouter à la queue de synchronisation
+      setPendingUpdates(prev => {
+        const newMap = new Map(prev);
+        newMap.set(draggedItem.id, updatedAssignment);
+        return newMap;
+      });
+    } else if (targetColumn !== 'completed' && draggedItem.completed) {
+      // Démarquer comme terminé si on sort de "completed"
+      const updatedAssignment: Assignment = { 
+        ...draggedItem,
+        completed: false
+      };
+
+      setLocalAssignments(prev => 
+        prev.map(a => a.id === draggedItem.id ? updatedAssignment : a)
+      );
+
+      setPendingUpdates(prev => {
+        const newMap = new Map(prev);
+        newMap.set(draggedItem.id, updatedAssignment);
+        return newMap;
       });
     }
 
@@ -235,7 +371,15 @@ export default function DevoirsPage() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Kanban Board</h1>
-              <p className="text-gray-600">Organisez vos travaux avec un tableau kanban</p>
+              <div className="flex items-center space-x-3">
+                <p className="text-gray-600">Organisez vos travaux avec un tableau kanban</p>
+                {pendingUpdates.size > 0 && (
+                  <div className="flex items-center space-x-2 bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                    <span>Sync {pendingUpdates.size} élément(s)...</span>
+                  </div>
+                )}
+              </div>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -467,13 +611,6 @@ function AssignmentCard({
   // Utilise les couleurs par matière au lieu de la priorité
   const subjectColors = getSubjectColors(assignment.subject);
   const [showMenu, setShowMenu] = useState(false);
-  
-  const isUrgent = () => {
-    const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return new Date(assignment.dueDate) <= tomorrow;
-  };
 
   const handleDragStart = (e: React.DragEvent) => {
     onDragStart(assignment);
@@ -538,54 +675,58 @@ function AssignmentCard({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Clock className="h-4 w-4 text-gray-400" />
-              <span className={`text-sm font-medium ${
-                isUrgent() && !assignment.completed 
-                  ? 'text-red-600 font-bold' 
-                  : 'text-gray-700'
-              }`}>
+              <span className="text-sm font-medium text-gray-700">
                 {formatDueDate(assignment.dueDate)}
               </span>
-              {isUrgent() && !assignment.completed && (
-                <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-xs font-bold">
-                  Urgent
-                </span>
-              )}
             </div>
           </div>
         </div>
         
         <div className="relative ml-2">
           <button 
-            onClick={() => setShowMenu(!showMenu)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 rounded-lg"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMenu(!showMenu);
+            }}
+            className="opacity-70 group-hover:opacity-100 hover:opacity-100 transition-all duration-200 p-2 hover:bg-gray-100/80 rounded-lg hover:scale-110"
           >
-            <MoreVertical className="h-4 w-4 text-gray-400" />
+            <MoreVertical className="h-4 w-4 text-gray-500 hover:text-gray-700" />
           </button>
           
           {showMenu && (
-            <div className="absolute right-0 mt-1 w-36 bg-white/95 backdrop-blur-sm border border-white/40 rounded-xl shadow-lg z-20 overflow-hidden">
+            <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-2xl shadow-xl border border-gray-200 z-30 overflow-hidden animate-in slide-in-from-top-2 duration-200">
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   onEditAssignment(assignment);
                   setShowMenu(false);
                 }}
-                className="flex items-center space-x-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50/80 transition-colors"
+                className="flex items-center space-x-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
               >
                 <Edit className="h-4 w-4" />
-                <span>Modifier</span>
+                <span className="font-medium">Modifier</span>
               </button>
-              <div className="border-t border-gray-100/60"></div>
+              <div className="border-t border-gray-100"></div>
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   onDeleteAssignment(assignment.id);
                   setShowMenu(false);
                 }}
-                className="flex items-center space-x-3 w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50/80 transition-colors"
+                className="flex items-center space-x-3 w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
               >
                 <Trash2 className="h-4 w-4" />
-                <span>Supprimer</span>
+                <span className="font-medium">Supprimer</span>
               </button>
             </div>
+          )}
+          
+          {/* Overlay pour fermer le menu en cliquant à côté */}
+          {showMenu && (
+            <div 
+              className="fixed inset-0 z-20" 
+              onClick={() => setShowMenu(false)}
+            />
           )}
         </div>
       </div>
