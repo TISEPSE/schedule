@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { User } from '@/types';
 
 export default function DebugPage() {
-  const [users, setUsers] = useState<Array<{id: string; email: string; firstName: string; lastName: string; role: string}>>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -217,7 +218,7 @@ export default function DebugPage() {
                         </span>
                       </td>
                       <td className="p-2 text-xs text-gray-500">
-                        {new Date(user.createdAt).toLocaleString('fr-FR')}
+                        {user.createdAt ? new Date(user.createdAt).toLocaleString('fr-FR') : 'N/A'}
                       </td>
                     </tr>
                   ))}

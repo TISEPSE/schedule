@@ -4,7 +4,7 @@ import { ServerDatabaseService } from '@/lib/database/server';
 // PUT /api/assignments/[id]
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const assignmentData = await request.json();
@@ -45,7 +45,7 @@ export async function PUT(
 // DELETE /api/assignments/[id]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;

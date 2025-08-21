@@ -6,7 +6,7 @@ import { User } from '@/types';
 import Image from 'next/image';
 
 // Mock notifications data - vide par défaut
-const mockNotifications: Array<{id: string; message: string; type: string}> = [];
+const mockNotifications: Array<{id: string; message: string; type: string; read: boolean; title: string; time: string}> = [];
 
 interface HeaderProps {
   user: User;

@@ -23,7 +23,7 @@ type FilterType = 'all' | 'courses' | 'assignments' | 'exams';
 interface WeeklyItem {
   id: string;
   title: string;
-  type: 'course' | 'practical' | 'exam' | 'assignment';
+  type: 'course' | 'practical' | 'exam' | 'project' | 'sport' | 'study' | 'assignment';
   day: string;
   startTime?: string;
   endTime?: string;

@@ -6,7 +6,7 @@ import { X, BookOpen, Calendar, Flag, FileText } from 'lucide-react';
 interface CreateAssignmentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: {title: string; description: string; subject: string; dueDate: Date; priority: string}) => Promise<void>;
+  onSubmit: (data: {title: string; description: string; subject: string; dueDate: Date; priority: 'low' | 'medium' | 'high'}) => Promise<void>;
 }
 
 const SUBJECTS = [

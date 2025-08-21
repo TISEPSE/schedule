@@ -20,7 +20,7 @@ export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<{id: string; title: string; type: string; startTime: string; endTime: string; subject?: string; location?: string; description?: string} | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<{id: string; title: string; type: string; startTime: Date; endTime: Date; subject?: string; location?: string; description?: string} | null>(null);
 
   // Générer les jours du mois avec grille fixe de 42 cases (6 semaines)
   const getDaysInMonth = (date: Date) => {
@@ -108,7 +108,7 @@ export default function Calendar() {
     });
   };
 
-  const handleEventClick = (event: {id: string; title: string; type: string; startTime: string; endTime: string; subject?: string; location?: string; description?: string}) => {
+  const handleEventClick = (event: {id: string; title?: string; type?: string; time?: string; color?: string; location?: string}) => {
     // Trouver l'événement complet dans la liste
     const fullEvent = events.find(e => e.id === event.id);
     if (fullEvent) {

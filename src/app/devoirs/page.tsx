@@ -19,13 +19,16 @@ import CreateAssignmentModal from '@/components/Devoirs/CreateAssignmentModal';
 
 interface Assignment {
   id: string;
+  userId: string;
   title: string;
   description: string;
   subject: string;
+  type: 'homework' | 'report' | 'essay' | 'study' | 'presentation' | 'research' | 'reading';
   dueDate: Date;
-  priority: string;
   completed: boolean;
-  status?: string;
+  priority: 'low' | 'medium' | 'high';
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export default function DevoirsPage() {
@@ -77,11 +80,11 @@ export default function DevoirsPage() {
   const filteredAssignments = getFilteredAssignments();
 
 
-  function isInProgress(assignment: { dueDate: Date; priority: string; status?: string }) {
+  function isInProgress(assignment: { dueDate: Date; priority: string }) {
     const now = new Date();
     const dueDate = new Date(assignment.dueDate);
     const daysDiff = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return assignment.status === 'in-progress' || (daysDiff <= 3 && daysDiff > 1 && assignment.priority !== 'low');
+    return daysDiff <= 3 && daysDiff > 1 && assignment.priority !== 'low';
   }
 
   // Groupement pour le kanban board avec design cohérent et backgrounds complets
@@ -108,7 +111,12 @@ export default function DevoirsPage() {
     },
     review: {
       title: 'À vérifier',
-      items: filteredAssignments.filter(a => !a.completed && a.status === 'review'),
+      items: filteredAssignments.filter(a => {
+        const now = new Date();
+        const dueDate = new Date(a.dueDate);
+        const daysDiff = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        return !a.completed && daysDiff <= 1 && daysDiff >= 0;
+      }),
       lightBg: 'bg-purple-100/80',
       headerBg: 'bg-purple-500/90',
       border: 'border-purple-200/40',
@@ -134,7 +142,7 @@ export default function DevoirsPage() {
     description: string;
     subject: string;
     dueDate: Date;
-    priority: string;
+    priority: 'low' | 'medium' | 'high';
   }) => {
     await createAssignment({
       title: formData.title,
@@ -180,34 +188,20 @@ export default function DevoirsPage() {
   const handleDrop = async (targetColumn: string) => {
     if (!draggedItem) return;
 
-    let newStatus = '';
     let completed = false;
 
     // Déterminer le nouveau statut en fonction de la colonne
-    switch (targetColumn) {
-      case 'todo':
-        newStatus = 'pending';
-        break;
-      case 'inProgress':
-        newStatus = 'in-progress';
-        break;
-      case 'review':
-        newStatus = 'review';
-        break;
-      case 'completed':
-        completed = true;
-        newStatus = 'completed';
-        break;
-      default:
-        return;
+    if (targetColumn === 'completed') {
+      completed = true;
     }
 
     // Mettre à jour le devoir
-    await updateAssignment({
-      ...draggedItem,
-      status: newStatus,
-      completed: completed
-    });
+    if (draggedItem.completed !== completed) {
+      await updateAssignment({
+        ...draggedItem,
+        completed: completed
+      });
+    }
 
     setDraggedItem(null);
   };
@@ -299,7 +293,6 @@ export default function DevoirsPage() {
                   textColor={column.textColor}
                   headerText={column.headerText}
                   accent={column.accent}
-                  description={column.description}
                   onToggleCompletion={toggleCompletion}
                   onEditAssignment={handleEditAssignment}
                   onDeleteAssignment={handleDeleteAssignment}
@@ -352,7 +345,6 @@ function KanbanColumn({
   textColor: string;
   headerText: string;
   accent: string;
-  description: string;
   onToggleCompletion: (id: string) => void;
   onEditAssignment: (assignment: Assignment) => void;
   onDeleteAssignment: (id: string) => void;

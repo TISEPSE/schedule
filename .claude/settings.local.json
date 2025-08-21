@@ -20,9 +20,13 @@
       "Bash(del \"D:\\Visual_Studio_Code\\Portfolio_Dev\\Application Emplois du temps\\schedule\\src\\app\\devoirs\\page_clean.tsx\")",
       "Bash(npm run lint)",
       "Bash(git add:*)",
-      "Bash(del \"D:\\Visual_Studio_Code\\Portfolio_Dev\\Application Emplois du temps\\schedule\\src\\lib\\animations.ts\")"
+      "Bash(del \"D:\\Visual_Studio_Code\\Portfolio_Dev\\Application Emplois du temps\\schedule\\src\\lib\\animations.ts\")",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "D:\\d D:\\Visual_Studio_Code\\Portfolio_Dev\\Application Emplois du temps"
+    ]
   }
 }
