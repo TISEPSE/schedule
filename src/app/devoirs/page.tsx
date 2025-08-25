@@ -41,6 +41,8 @@ export default function DevoirsPage() {
   const [pendingUpdates, setPendingUpdates] = useState<Map<string, Assignment>>(new Map());
   // État persistant pour forcer les colonnes (pas sauvegardé en DB)
   const [forcedColumns, setForcedColumns] = useState<Map<string, string>>(new Map());
+  // État pour mémoriser la dernière position connue avant de marquer comme terminé
+  const [lastKnownColumns, setLastKnownColumns] = useState<Map<string, string>>(new Map());
   
   // Synchroniser l'état local avec les assignments du serveur
   // Mais préserver les changements locaux en attente
@@ -153,17 +155,24 @@ export default function DevoirsPage() {
     // Sinon, on utilise la logique automatique
     if (assignment.completed) {
       return 'completed';
-    } else if (isInProgress(assignment)) {
-      return 'inProgress';
-    } else {
-      const now = new Date();
-      const dueDate = new Date(assignment.dueDate);
-      const daysDiff = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysDiff <= 1 && daysDiff >= 0) {
-        return 'review';
-      }
-      return 'todo';
     }
+    
+    // Logique automatique améliorée
+    const now = new Date();
+    const dueDate = new Date(assignment.dueDate);
+    const daysDiff = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Ordre de priorité pour éviter les conflits :
+    // 1. En cours : 1-3 jours et priorité élevée/moyenne
+    if (daysDiff >= 1 && daysDiff <= 3 && assignment.priority !== 'low') {
+      return 'inProgress';
+    }
+    // 2. À vérifier : aujourd'hui ou demain (urgence maximale)
+    if (daysDiff >= 0 && daysDiff <= 1) {
+      return 'review';
+    }
+    // 3. À faire : tout le reste (futur lointain)
+    return 'todo';
   };
 
   // Groupement pour le kanban board avec design cohérent et backgrounds complets
@@ -246,14 +255,35 @@ export default function DevoirsPage() {
 
     const newCompleted = !assignment.completed;
     
-    // Forcer la colonne selon le statut completed
+    // Gestion intelligente des colonnes avec mémorisation
     setForcedColumns(prev => {
       const newMap = new Map(prev);
       if (newCompleted) {
+        // Marquer comme terminé : mémoriser la colonne actuelle si pas déjà forcée
+        if (!prev.has(assignmentId)) {
+          const currentColumn = getAssignmentColumn(assignment);
+          setLastKnownColumns(prevLastKnown => {
+            const newLastKnownMap = new Map(prevLastKnown);
+            newLastKnownMap.set(assignmentId, currentColumn);
+            return newLastKnownMap;
+          });
+        }
         newMap.set(assignmentId, 'completed');
       } else {
-        // Retirer le forçage pour laisser la logique automatique
-        newMap.delete(assignmentId);
+        // Décocher : restaurer la dernière position connue si elle existe
+        const lastKnownColumn = lastKnownColumns.get(assignmentId);
+        if (lastKnownColumn && lastKnownColumn !== 'completed') {
+          newMap.set(assignmentId, lastKnownColumn);
+          // Nettoyer la dernière position connue après restauration
+          setLastKnownColumns(prevLastKnown => {
+            const newLastKnownMap = new Map(prevLastKnown);
+            newLastKnownMap.delete(assignmentId);
+            return newLastKnownMap;
+          });
+        } else {
+          // Pas de dernière position connue : utiliser la logique automatique améliorée
+          newMap.delete(assignmentId);
+        }
       }
       return newMap;
     });
@@ -296,9 +326,27 @@ export default function DevoirsPage() {
       return;
     }
 
-    // 1. FORCER LA COLONNE LOCALEMENT (ultra-rapide, persistant)
+    // 1. GESTION INTELLIGENTE DES COLONNES avec mémorisation
     setForcedColumns(prev => {
       const newMap = new Map(prev);
+      
+      // Mémoriser la dernière position connue si on va vers "completed"
+      if (targetColumn === 'completed' && currentColumn !== 'completed' && !prev.has(draggedItem.id)) {
+        setLastKnownColumns(prevLastKnown => {
+          const newLastKnownMap = new Map(prevLastKnown);
+          newLastKnownMap.set(draggedItem.id, currentColumn);
+          return newLastKnownMap;
+        });
+      }
+      // Mettre à jour la dernière position connue si le devoir n'est PAS terminé
+      else if (targetColumn !== 'completed' && !draggedItem.completed) {
+        setLastKnownColumns(prevLastKnown => {
+          const newLastKnownMap = new Map(prevLastKnown);
+          newLastKnownMap.set(draggedItem.id, targetColumn);
+          return newLastKnownMap;
+        });
+      }
+      
       newMap.set(draggedItem.id, targetColumn);
       return newMap;
     });
