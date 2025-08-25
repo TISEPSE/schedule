@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
 import { useState } from 'react';
 import { useTestUser } from '@/hooks/useTestUser';
-import { Users, Award, BookOpen, Clock, MessageCircle, GraduationCap, UserCog, Plus, Grid, Layout, FileText } from 'lucide-react';
+import { Users, Award, BookOpen, Clock, MessageCircle, GraduationCap, UserCog, Plus, Grid, Layout, FileText, UsersRound } from 'lucide-react';
 
 // Mock data pour la classe
 const mockClassmates = [
@@ -155,8 +155,8 @@ export default function ClassesPage() {
               <span className="text-sm font-medium">Planning</span>
             </button>
             <button className="p-4 text-center rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 transition-colors">
-              <GraduationCap className="h-6 w-6 mx-auto mb-2" />
-              <span className="text-sm font-medium">Changer de niveau</span>
+              <UsersRound className="h-6 w-6 mx-auto mb-2" />
+              <span className="text-sm font-medium">Espace de travail</span>
             </button>
           </div>
         </div>

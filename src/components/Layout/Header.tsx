@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Bell, Search, LogOut, X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { User } from '@/types';
 import Image from 'next/image';
+import Breadcrumb from './Breadcrumb';
 
 // Mock notifications data - vide par défaut
 const mockNotifications: Array<{id: string; message: string; type: string; read: boolean; title: string; time: string}> = [];
@@ -64,8 +65,13 @@ export default function Header({ user, onLogout }: HeaderProps) {
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4 w-full">
       <div className="flex items-center justify-between">
-        {/* Search Bar */}
-        <div className="flex-1 max-w-md">
+        {/* Breadcrumb Navigation */}
+        <div className="flex-1">
+          <Breadcrumb />
+        </div>
+        
+        {/* Search Bar - moved to right */}
+        <div className="max-w-sm mx-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input

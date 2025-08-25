@@ -21,7 +21,8 @@
       "Bash(npm run lint)",
       "Bash(git add:*)",
       "Bash(del \"D:\\Visual_Studio_Code\\Portfolio_Dev\\Application Emplois du temps\\schedule\\src\\lib\\animations.ts\")",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "WebFetch(domain:plan.afpi-bretagne.com)"
     ],
     "deny": [],
     "ask": [],
