@@ -34,15 +34,14 @@ const adminNavItems = [
 ];
 
 const studentNavItems = [
-  { icon: LayoutDashboard, label: 'Tableau de bord', href: '/dashboard' },
-  { icon: Calendar, label: 'Mon emploi du temps', href: '/planning' },
-  { icon: CalendarDays, label: 'Mon calendrier', href: '/calendar' },
-  { icon: FileText, label: 'Mon bulletin', href: '/bulletin' },
-  { icon: Trello, label: 'Mes devoirs', href: '/devoirs' },
-  { icon: Building, label: 'Mon école', href: '/organization' },
+  { icon: LayoutDashboard, label: 'Accueil', href: '/dashboard' },
+  { icon: Calendar, label: 'Planning', href: '/planning' },
+  { icon: CalendarDays, label: 'Calendrier', href: '/calendar' },
+  { icon: Trello, label: 'Devoirs', href: '/devoirs' },
+  { icon: FileText, label: 'Notes', href: '/bulletin' },
   { icon: Users, label: 'Ma classe', href: '/classes' },
-  { icon: Settings, label: 'Paramètres', href: '/settings' },
   { icon: User, label: 'Mon profil', href: '/profile' },
+  { icon: Settings, label: 'Paramètres', href: '/settings' },
 ];
 
 export default function Sidebar({ userRole, isCollapsed, onToggle }: SidebarProps) {
@@ -104,7 +103,7 @@ export default function Sidebar({ userRole, isCollapsed, onToggle }: SidebarProp
       )}
 
       {/* Navigation */}
-      <nav className={`${isCollapsed ? 'p-2' : 'p-4'} space-y-3`}>
+      <nav className={`${isCollapsed ? 'p-2' : 'p-4'} ${isCollapsed ? 'space-y-2' : 'space-y-3'}`}>
         {navItems.map((item) => {
           const Icon = item.icon;
           // Détecter si c'est la page active - prioriser le clic pour feedback instantané
@@ -122,7 +121,7 @@ export default function Sidebar({ userRole, isCollapsed, onToggle }: SidebarProp
               onClick={() => handleNavClick(item.href)}
               className={`flex items-center rounded-lg transition-all duration-300 ease-out group relative ${
                 isCollapsed 
-                  ? 'justify-center p-4' 
+                  ? 'justify-center p-3' 
                   : 'space-x-3 px-4 py-3'
               } ${
                 isActive
@@ -144,7 +143,7 @@ export default function Sidebar({ userRole, isCollapsed, onToggle }: SidebarProp
               
               {/* Tooltip en mode replié */}
               {isCollapsed && (
-                <div className="absolute left-16 bg-gray-900 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-50 whitespace-nowrap">
+                <div className="absolute left-14 bg-gray-900 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-50 whitespace-nowrap">
                   {item.label}
                 </div>
               )}

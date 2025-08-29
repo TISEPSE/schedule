@@ -347,9 +347,9 @@ export default function PlanningPage() {
             </div>
           </div>
 
-          {/* Filtres - Amélioration du design */}
-          <div className="flex items-center space-x-2">
-            <Filter className="h-5 w-5 text-gray-500" />
+          {/* Filtres responsive */}
+          <div className="flex items-center space-x-2 overflow-x-auto">
+            <Filter className="h-5 w-5 text-gray-500 flex-shrink-0" />
             <div className="flex space-x-2">
               {filters.map((filter) => {
                 const IconComponent = filter.icon;
@@ -357,14 +357,14 @@ export default function PlanningPage() {
                   <button
                     key={filter.key}
                     onClick={() => setActiveFilter(filter.key as FilterType)}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                       activeFilter === filter.key 
                         ? 'bg-blue-100 text-blue-700' 
                         : 'text-gray-600 hover:bg-gray-100'
                     }`}
                   >
                     <IconComponent className="h-4 w-4" />
-                    <span>{filter.label}</span>
+                    <span className="hidden sm:inline">{filter.label}</span>
                   </button>
                 );
               })}
@@ -372,9 +372,11 @@ export default function PlanningPage() {
           </div>
         </div>
 
-        {/* Vue hebdomadaire - Design amélioré */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 page-animate-delay-2">
-            <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
+        {/* Vue hebdomadaire - Design responsive */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 page-animate-delay-2">
+          {/* Desktop View */}
+          <div className="hidden lg:block p-6">
+            <div className="grid grid-cols-7 gap-4">
               {dayKeys.map((dayKey, index) => {
                 const dayItems = itemsByDay[dayKey] || [];
                 const dayDate = weekDates[index];
@@ -460,6 +462,115 @@ export default function PlanningPage() {
               );
             })}
             </div>
+          </div>
+
+          {/* Mobile View */}
+          <div className="lg:hidden">
+            {dayKeys.map((dayKey, index) => {
+              const dayItems = itemsByDay[dayKey] || [];
+              const dayDate = weekDates[index];
+              const isToday = dayDate.toDateString() === new Date().toDateString();
+              const isWeekend = dayKey === 'saturday' || dayKey === 'sunday';
+
+              // Ne montrer que les jours avec du contenu + aujourd'hui
+              if (!isToday && dayItems.length === 0) return null;
+
+              return (
+                <div 
+                  key={dayKey} 
+                  className={`mb-6 ${isWeekend ? 'opacity-75' : ''}`}
+                >
+                  {/* Header du jour mobile */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-t-xl">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
+                        isToday 
+                          ? 'bg-blue-500 text-white shadow-md' 
+                          : 'bg-white text-gray-700 border border-gray-200'
+                      }`}>
+                        {dayDate.getDate()}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-gray-900">{dayNames[index]}</h3>
+                        <p className="text-sm text-gray-500">{dayItems.length} événement(s)</p>
+                      </div>
+                    </div>
+                    {isToday && (
+                      <div className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">
+                        Aujourd&apos;hui
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Contenu du jour mobile */}
+                  <div className="bg-white rounded-b-xl border border-gray-100">
+                    {dayItems.length === 0 ? (
+                      <div className="p-6 text-center text-gray-500">
+                        <Calendar className="h-10 w-10 mx-auto mb-3 text-gray-400" />
+                        <p className="font-medium">Aucun événement</p>
+                        <p className="text-sm text-gray-400 mt-1">Journée libre</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-gray-100">
+                        {dayItems.map((item) => (
+                          <div
+                            key={item.id}
+                            className={`p-4 ${item.bgColor} hover:bg-opacity-80 transition-colors active:scale-[0.98] transition-transform`}
+                          >
+                            <div className="flex items-start space-x-4">
+                              {/* Indicateur de temps/couleur */}
+                              <div className={`w-1 h-16 rounded-full ${item.borderColor} flex-shrink-0 mt-1`}></div>
+                              
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-semibold text-base leading-tight text-gray-900 mb-2">
+                                  {item.title}
+                                </h4>
+                                
+                                <div className="space-y-2 text-sm text-gray-600 mb-2">
+                                  <div className="flex items-center space-x-2">
+                                    <Clock className="h-4 w-4 flex-shrink-0 text-gray-500" />
+                                    <span className="font-medium">
+                                      {item.type === 'assignment'
+                                        ? `À rendre pour ${item.dueTime}`
+                                        : `${item.startTime} - ${item.endTime}`
+                                      }
+                                    </span>
+                                  </div>
+                                  
+                                  {item.location && (
+                                    <div className="flex items-center space-x-2">
+                                      <MapPin className="h-4 w-4 flex-shrink-0 text-gray-500" />
+                                      <span className="truncate">{item.location}</span>
+                                    </div>
+                                  )}
+                                  
+                                  {item.subject && (
+                                    <div className="flex items-center space-x-2">
+                                      <BookOpen className="h-4 w-4 flex-shrink-0 text-gray-500" />
+                                      <span className="truncate font-medium">{item.subject}</span>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {item.description && (
+                                  <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                                    {item.description}
+                                  </p>
+                                )}
+                              </div>
+                              
+                              {/* Chevron pour indiquer qu'on peut interagir */}
+                              <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0 mt-2" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Modal OCR */}
