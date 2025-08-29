@@ -3,7 +3,48 @@
 import { useAuth } from '@/context/AuthContext';
 import { redirect } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+
+interface SyncEvent {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  room: string;
+  description?: string;
+  source?: string;
+}
+
+interface SyncAssignment {
+  id: string;
+  title: string;
+  subject: string;
+  dueDate: string;
+  status: string;
+  description?: string;
+}
+
+interface SyncGrade {
+  id: string;
+  subject: string;
+  assignment: string;
+  grade: string;
+  date: string;
+}
+
+interface SyncNews {
+  id: string;
+  title: string;
+  content: string;
+  date: string;
+}
+
+interface SyncData {
+  events: SyncEvent[];
+  assignments: SyncAssignment[];
+  grades: SyncGrade[];
+  news: SyncNews[];
+}
 import { 
   Settings, 
   Wifi, 
@@ -15,13 +56,7 @@ import {
   BookOpen,
   GraduationCap,
   Bell,
-  Users,
-  Clock,
-  AlertCircle,
-  CheckCircle,
-  Info,
-  Trash2,
-  Download
+  CheckCircle
 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -33,7 +68,7 @@ export default function SettingsPage() {
   });
   const [connectionStatus, setConnectionStatus] = useState('disconnected'); // 'disconnected' | 'connecting' | 'connected' | 'error'
   const [lastSync, setLastSync] = useState<Date | null>(null);
-  const [syncData, setSyncData] = useState({
+  const [syncData, setSyncData] = useState<SyncData>({
     events: [],
     assignments: [],
     grades: [],
@@ -89,12 +124,12 @@ export default function SettingsPage() {
         throw new Error('Connexion échouée');
       }
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       setConnectionStatus('error');
       console.error('❌ Erreur de connexion NetYParéo:', error);
       
       // Afficher l'erreur à l'utilisateur
-      alert(`Erreur de connexion: ${error.message}`);
+      alert(`Erreur de connexion: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     } finally {
       setIsLoading(false);
     }
@@ -167,7 +202,7 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nom d'utilisateur
+                    Nom d&apos;utilisateur
                   </label>
                   <input
                     type="text"
@@ -252,13 +287,13 @@ export default function SettingsPage() {
                 </span>
               </div>
               <div className="space-y-3 max-h-80 overflow-y-auto">
-                {syncData.events.map((event: any) => (
-                  <div key={event.id} className="p-3 bg-blue-50 rounded-lg">
-                    <h4 className="font-medium text-gray-900">{event.title}</h4>
+                {syncData.events.map((event, index) => (
+                  <div key={event.id || index} className="p-3 bg-blue-50 rounded-lg">
+                    <h4 className="font-medium text-gray-900">{event.title || "Événement"}</h4>
                     <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                      <span> 📅 {event.date}</span>
-                      <span> 🕒 {event.time}</span>
-                      <span> 📍 {event.room}</span>
+                      <span> 📅 {event.date || "Date inconnue"}</span>
+                      <span> 🕒 {event.time || "Heure inconnue"}</span>
+                      <span> 📍 {event.room || "Lieu inconnu"}</span>
                     </div>
                   </div>
                 ))}
@@ -277,8 +312,8 @@ export default function SettingsPage() {
                 </span>
               </div>
               <div className="space-y-3 max-h-80 overflow-y-auto">
-                {syncData.assignments.map((assignment: any) => (
-                  <div key={assignment.id} className="p-3 bg-green-50 rounded-lg">
+                {syncData.assignments.map((assignment, index) => (
+                  <div key={assignment.id || index} className="p-3 bg-green-50 rounded-lg">
                     <h4 className="font-medium text-gray-900">{assignment.title}</h4>
                     <div className="flex items-center justify-between text-sm text-gray-600 mt-1">
                       <span>{assignment.subject}</span>
@@ -306,8 +341,8 @@ export default function SettingsPage() {
                 </span>
               </div>
               <div className="space-y-3 max-h-80 overflow-y-auto">
-                {syncData.grades.map((grade: any) => (
-                  <div key={grade.id} className="p-3 bg-purple-50 rounded-lg">
+                {syncData.grades.map((grade, index) => (
+                  <div key={grade.id || index} className="p-3 bg-purple-50 rounded-lg">
                     <div className="flex items-center justify-between">
                       <div>
                         <h4 className="font-medium text-gray-900">{grade.assignment}</h4>
@@ -335,8 +370,8 @@ export default function SettingsPage() {
                 </span>
               </div>
               <div className="space-y-3 max-h-80 overflow-y-auto">
-                {syncData.news.map((news: any) => (
-                  <div key={news.id} className="p-3 bg-orange-50 rounded-lg">
+                {syncData.news.map((news, index) => (
+                  <div key={news.id || index} className="p-3 bg-orange-50 rounded-lg">
                     <h4 className="font-medium text-gray-900">{news.title}</h4>
                     <p className="text-sm text-gray-600 mt-1">{news.content}</p>
                     <p className="text-xs text-gray-500 mt-2">{news.date}</p>

@@ -14,7 +14,12 @@ import {
   AlertCircle,
   Calendar,
   Filter,
-  GraduationCap
+  GraduationCap,
+  Camera,
+  Upload,
+  FileImage,
+  Download,
+  Globe
 } from 'lucide-react';
 
 // Types pour les filtres
@@ -50,6 +55,17 @@ export default function PlanningPage() {
   const { events } = useApiData(user?.id || '');
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [showOCRModal, setShowOCRModal] = useState(false);
+  const [isProcessingOCR, setIsProcessingOCR] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importCredentials, setImportCredentials] = useState({
+    platform: 'ecoledirecte' as 'ecoledirecte' | 'pronote' | 'netypareo',
+    username: '',
+    password: '',
+    server: ''
+  });
 
   if (!user) {
     redirect('/');
@@ -134,6 +150,138 @@ export default function PlanningPage() {
     setCurrentWeek(newWeek);
   };
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setSelectedImage(file);
+    }
+  };
+
+  const processOCR = async () => {
+    if (!selectedImage) return;
+    
+    setIsProcessingOCR(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('image', selectedImage);
+      
+      const response = await fetch('/api/ocr', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('OCR Result:', result);
+        
+        // Convertir les items OCR en événements
+        if (result.scheduleItems && result.scheduleItems.length > 0) {
+          const newEvents = result.scheduleItems.map((item: { day: string; time: string; title: string; location?: string }) => {
+            const eventDate = getNextDateForDay(item.day);
+            const [hours, minutes] = item.time.split(':');
+            const startTime = new Date(eventDate);
+            startTime.setHours(parseInt(hours), parseInt(minutes));
+            
+            const endTime = new Date(startTime);
+            endTime.setHours(startTime.getHours() + 1); // Par défaut 1h
+            
+            return {
+              id: `ocr-${Date.now()}-${Math.random()}`,
+              title: item.title,
+              type: 'course' as const,
+              startTime: startTime.toISOString(),
+              endTime: endTime.toISOString(),
+              location: item.location || '',
+              description: `Importé depuis OCR - ${item.title}`,
+              userId: user?.id
+            };
+          });
+          
+          // Sauvegarder les nouveaux événements
+          for (const event of newEvents) {
+            await fetch('/api/events', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(event)
+            });
+          }
+          
+          // Recharger la page pour afficher les nouveaux événements
+          window.location.reload();
+        }
+      }
+    } catch (error) {
+      console.error('Erreur OCR:', error);
+      alert('Erreur lors du traitement de l&apos;image. Veuillez réessayer.');
+    } finally {
+      setIsProcessingOCR(false);
+      setShowOCRModal(false);
+      setSelectedImage(null);
+    }
+  };
+
+  // Fonction pour obtenir la prochaine date d'un jour donné
+  const getNextDateForDay = (dayName: string): Date => {
+    const daysMap: { [key: string]: number } = {
+      'dimanche': 0, 'lundi': 1, 'mardi': 2, 'mercredi': 3,
+      'jeudi': 4, 'vendredi': 5, 'samedi': 6
+    };
+    
+    const targetDay = daysMap[dayName.toLowerCase()];
+    const today = new Date();
+    const currentDay = today.getDay();
+    
+    let daysUntilTarget = targetDay - currentDay;
+    if (daysUntilTarget <= 0) {
+      daysUntilTarget += 7; // Prochaine semaine
+    }
+    
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + daysUntilTarget);
+    return targetDate;
+  };
+
+  const handleImportFromPlatform = async () => {
+    setIsImporting(true);
+    
+    try {
+      const response = await fetch(`/api/import/${importCredentials.platform}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: importCredentials.username,
+          password: importCredentials.password,
+          server: importCredentials.server,
+          userId: user?.id
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Import result:', result);
+        
+        // Recharger la page pour afficher les nouveaux événements
+        window.location.reload();
+      } else {
+        const error = await response.json();
+        alert(`Erreur d'import: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Erreur import:', error);
+      alert('Erreur lors de l&apos;import. Veuillez vérifier vos identifiants.');
+    } finally {
+      setIsImporting(false);
+      setShowImportModal(false);
+      setImportCredentials({
+        platform: 'ecoledirecte',
+        username: '',
+        password: '',
+        server: ''
+      });
+    }
+  };
+
   // Fonction supprimée - plus besoin de coches pour les cours
 
   const dayNames = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
@@ -152,9 +300,30 @@ export default function PlanningPage() {
         {/* Header avec navigation et filtres - Consistent avec les autres pages */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 page-animate-delay-1">
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Mon emploi du temps</h1>
-              <p className="text-gray-600">Vue hebdomadaire de vos cours</p>
+            <div className="flex items-center justify-between flex-1">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Mon emploi du temps</h1>
+                <p className="text-gray-600">Vue hebdomadaire de vos cours</p>
+              </div>
+              
+              {/* Boutons d'import */}
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowOCRModal(true)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                >
+                  <Camera className="h-5 w-5" />
+                  <span className="font-medium">Scanner</span>
+                </button>
+                
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                >
+                  <Download className="h-5 w-5" />
+                  <span className="font-medium">Importer</span>
+                </button>
+              </div>
             </div>
             
             {/* Navigation semaine */}
@@ -292,6 +461,217 @@ export default function PlanningPage() {
             })}
             </div>
         </div>
+
+        {/* Modal OCR */}
+        {showOCRModal && (
+          <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Camera className="h-8 w-8 text-purple-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Scanner un planning</h3>
+                <p className="text-gray-600 text-sm">Prenez une photo de votre planning papier pour l&apos;importer automatiquement</p>
+              </div>
+
+              <div className="space-y-4">
+                {/* Zone d'upload */}
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-purple-400 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label htmlFor="image-upload" className="cursor-pointer">
+                    {selectedImage ? (
+                      <div className="space-y-2">
+                        <FileImage className="h-8 w-8 text-green-600 mx-auto" />
+                        <p className="text-sm font-medium text-green-600">{selectedImage.name}</p>
+                        <p className="text-xs text-gray-500">Cliquez pour changer l&apos;image</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Upload className="h-8 w-8 text-gray-400 mx-auto" />
+                        <p className="text-sm font-medium text-gray-600">Cliquez pour sélectionner une image</p>
+                        <p className="text-xs text-gray-500">ou glissez-déposez votre photo ici</p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+
+                {/* Boutons */}
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => {
+                      setShowOCRModal(false);
+                      setSelectedImage(null);
+                    }}
+                    className="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={processOCR}
+                    disabled={!selectedImage || isProcessingOCR}
+                    className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center space-x-2"
+                  >
+                    {isProcessingOCR ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        <span>Traitement...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="h-4 w-4" />
+                        <span>Scanner</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Import EcoleDirecte/Pronote */}
+        {showImportModal && (
+          <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Globe className="h-8 w-8 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold text-black mb-2">Importer depuis une plateforme</h3>
+                <p className="text-gray-800 text-sm">Connectez-vous à EcoleDirecte ou Pronote pour importer automatiquement votre planning</p>
+              </div>
+
+              <div className="space-y-4">
+                {/* Sélection de la plateforme */}
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Plateforme</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      onClick={() => setImportCredentials({...importCredentials, platform: 'ecoledirecte'})}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        importCredentials.platform === 'ecoledirecte'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-300 hover:border-gray-400 bg-white'
+                      }`}
+                    >
+                      <div className={`font-medium text-sm ${
+                        importCredentials.platform === 'ecoledirecte' ? 'text-blue-700' : 'text-black'
+                      }`}>EcoleDirecte</div>
+                    </button>
+                    <button
+                      onClick={() => setImportCredentials({...importCredentials, platform: 'pronote'})}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        importCredentials.platform === 'pronote'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-300 hover:border-gray-400 bg-white'
+                      }`}
+                    >
+                      <div className={`font-medium text-sm ${
+                        importCredentials.platform === 'pronote' ? 'text-blue-700' : 'text-black'
+                      }`}>Pronote</div>
+                    </button>
+                    <button
+                      onClick={() => setImportCredentials({...importCredentials, platform: 'netypareo'})}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        importCredentials.platform === 'netypareo'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-300 hover:border-gray-400 bg-white'
+                      }`}
+                    >
+                      <div className={`font-medium text-sm ${
+                        importCredentials.platform === 'netypareo' ? 'text-blue-700' : 'text-black'
+                      }`}>Nétyparéo</div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Champs de connexion */}
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Nom d&apos;utilisateur</label>
+                  <input
+                    type="text"
+                    value={importCredentials.username}
+                    onChange={(e) => setImportCredentials({...importCredentials, username: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
+                    placeholder="Votre nom d'utilisateur"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Mot de passe</label>
+                  <input
+                    type="password"
+                    value={importCredentials.password}
+                    onChange={(e) => setImportCredentials({...importCredentials, password: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
+                    placeholder="Votre mot de passe"
+                  />
+                </div>
+
+                {(importCredentials.platform === 'pronote' || importCredentials.platform === 'netypareo') && (
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">
+                      {importCredentials.platform === 'pronote' ? 'Serveur (URL)' : 'URL Nétyparéo'}
+                    </label>
+                    <input
+                      type="text"
+                      value={importCredentials.server}
+                      onChange={(e) => setImportCredentials({...importCredentials, server: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
+                      placeholder={
+                        importCredentials.platform === 'pronote' 
+                          ? "https://votre-etablissement.index-education.net"
+                          : "https://plan.afpi-bretagne.com"
+                      }
+                    />
+                  </div>
+                )}
+
+                {/* Boutons */}
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    onClick={() => {
+                      setShowImportModal(false);
+                      setImportCredentials({
+                        platform: 'ecoledirecte',
+                        username: '',
+                        password: '',
+                        server: ''
+                      });
+                    }}
+                    className="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={handleImportFromPlatform}
+                    disabled={!importCredentials.username || !importCredentials.password || isImporting || 
+                             ((importCredentials.platform === 'pronote' || importCredentials.platform === 'netypareo') && !importCredentials.server)}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center space-x-2"
+                  >
+                    {isImporting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        <span>Import...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4" />
+                        <span>Importer</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </MainLayout>
   );

@@ -137,12 +137,13 @@ export default function DevoirsPage() {
   const filteredAssignments = getFilteredAssignments();
 
 
-  function isInProgress(assignment: { dueDate: Date; priority: string }) {
-    const now = new Date();
-    const dueDate = new Date(assignment.dueDate);
-    const daysDiff = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return daysDiff <= 3 && daysDiff > 1 && assignment.priority !== 'low';
-  }
+  // Fonction supprimée car non utilisée
+  // function isInProgress(assignment: { dueDate: Date; priority: string }) {
+  //   const now = new Date();
+  //   const dueDate = new Date(assignment.dueDate);
+  //   const daysDiff = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  //   return daysDiff <= 3 && daysDiff > 1 && assignment.priority !== 'low';
+  // }
 
   // Fonction pour déterminer la colonne d'un devoir
   const getAssignmentColumn = (assignment: Assignment): 'todo' | 'inProgress' | 'review' | 'completed' => {

@@ -307,7 +307,7 @@ export default function RecentActivity({ userRole, assignments, events }: Recent
                 Aucune actualité
               </p>
               <p className="text-gray-400 text-xs mt-1">
-                Les actualités de l'école apparaîtront ici
+                Les actualités de l&apos;école apparaîtront ici
               </p>
             </div>
           )}
