@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import puppeteer from 'puppeteer';
 
 export async function POST(request: NextRequest) {
+  let browser: any = null;
+  
   try {
     const { username, password } = await request.json();
 
@@ -12,10 +13,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🚀 Démarrage du scrapping NetYParéo...');
-
+    // Import dynamique de Puppeteer
+    const puppeteer = (await import('puppeteer')).default;
+    
     // Lancement de Puppeteer
-    const browser = await puppeteer.launch({
+    browser = await puppeteer.launch({
       headless: true, // Mode headless pour la production
       args: [
         '--no-sandbox',
@@ -32,15 +34,11 @@ export async function POST(request: NextRequest) {
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
 
     try {
-      console.log('🔍 Navigation vers NetYParéo...');
-      
       // Navigation vers la page de connexion
       await page.goto('https://plan.afpi-bretagne.com/', { 
         waitUntil: 'networkidle2',
         timeout: 30000 
       });
-
-      console.log('📝 Saisie des identifiants...');
 
       // Attendre que le formulaire soit chargé
       await page.waitForSelector('input[name="login"]', { timeout: 10000 });
@@ -49,8 +47,6 @@ export async function POST(request: NextRequest) {
       await page.type('input[name="login"]', username);
       await page.type('input[name="password"]', password);
 
-      console.log('🔐 Connexion...');
-
       // Clic sur le bouton de connexion
       await page.click('input[type="submit"]');
 
@@ -58,12 +54,6 @@ export async function POST(request: NextRequest) {
       try {
         // Attendre soit la page d'accueil soit un message d'erreur
         await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 });
-        
-        // Debug: capturer le contenu de la page apres connexion
-        const pageContent = await page.content();
-        const pageText = await page.evaluate(() => document.body.innerText);
-        console.log('📄 Contenu page après connexion (début):', pageText.substring(0, 500));
-        console.log('🔗 URL actuelle:', page.url());
         
         // Vérifier si on est connecté
         const isLoggedIn = await page.evaluate(() => {
@@ -114,11 +104,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        console.log('✅ Connexion réussie !');
-
         // Récupération des données
-        console.log('📊 Récupération des données...');
-
         const scrapedData = await scrapeAllData(page);
 
         await browser.close();
@@ -131,7 +117,6 @@ export async function POST(request: NextRequest) {
         });
 
       } catch (navigationError) {
-        console.error('Erreur de navigation:', navigationError);
         await browser.close();
         return NextResponse.json(
           { error: 'Erreur lors de la connexion - vérifiez vos identifiants' },
@@ -140,8 +125,9 @@ export async function POST(request: NextRequest) {
       }
 
     } catch (pageError) {
-      console.error('Erreur sur la page:', pageError);
-      await browser.close();
+      if (browser) {
+        await browser.close();
+      }
       return NextResponse.json(
         { error: 'Erreur lors de l\'accès à NetYParéo' },
         { status: 500 }
@@ -149,9 +135,13 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Erreur générale:', error);
+    console.error('❌ Erreur générale:', error);
+    console.error('❌ Stack:', error.stack);
+    if (browser) {
+      await browser.close();
+    }
     return NextResponse.json(
-      { error: 'Erreur interne du serveur' },
+      { error: `Erreur: ${error.message}` },
       { status: 500 }
     );
   }
@@ -167,24 +157,12 @@ async function scrapeAllData(page: any) {
   };
 
   try {
-    // 1. Scraper le planning
-    console.log('📅 Scrapping du planning...');
     data.events = await scrapePlanning(page);
-
-    // 2. Scraper les devoirs/travaux
-    console.log('📚 Scrapping des devoirs...');
     data.assignments = await scrapeAssignments(page);
-
-    // 3. Scraper les notes
-    console.log('📊 Scrapping des notes...');
     data.grades = await scrapeGrades(page);
-
-    // 4. Scraper les actualités
-    console.log('📢 Scrapping des actualités...');
     data.news = await scrapeNews(page);
-
   } catch (scrapeError) {
-    console.error('Erreur lors du scrapping:', scrapeError);
+    // Erreur silencieuse - continue avec des données partielles
   }
 
   return data;
@@ -195,28 +173,20 @@ async function scrapePlanning(page: any) {
   try {
     let allEvents: any[] = [];
 
-    // 1. Scrapper la page calendrier
-    console.log('📅 Navigation vers le calendrier...');
+    // Scrapper la page calendrier
     await page.goto('https://plan.afpi-bretagne.com/index.php/apprenant/calendrier/', { 
       waitUntil: 'networkidle2', 
       timeout: 15000 
     });
 
-    const pageContent1 = await page.content();
-    console.log('📋 Page calendrier chargée, taille:', pageContent1.length);
-
     const calendarEvents = await extractPlanningEvents(page, 'calendrier');
     allEvents.push(...calendarEvents);
 
-    // 2. Scrapper la page planning courant
-    console.log('📅 Navigation vers planning/courant...');
+    // Scrapper la page planning courant
     await page.goto('https://plan.afpi-bretagne.com/index.php/apprenant/planning/courant/', { 
       waitUntil: 'networkidle2', 
       timeout: 15000 
     });
-
-    const pageContent2 = await page.content();
-    console.log('📋 Page planning/courant chargée, taille:', pageContent2.length);
 
     const currentPlanningEvents = await extractPlanningEvents(page, 'planning-courant');
     allEvents.push(...currentPlanningEvents);
@@ -226,19 +196,15 @@ async function scrapePlanning(page: any) {
       index === self.findIndex(e => e.title === event.title && e.description === event.description)
     );
 
-    console.log(`✅ Total: ${uniqueEvents.length} evenements uniques trouves`);
-    return uniqueEvents.slice(0, 20); // Augmenter la limite pour 2 pages
+    return uniqueEvents.slice(0, 20);
 
   } catch (error) {
-    console.error('Erreur scrapping planning:', error);
     return [];
   }
 }
 
 // Fonction helper pour extraire les événements d'une page
 async function extractPlanningEvents(page: any, pageType: string) {
-  console.log(`🔍 Extraction evenements pour: ${pageType}`);
-  
   const events = await page.evaluate((pageType: string) => {
     const events = [];
     
@@ -254,12 +220,9 @@ async function extractPlanningEvents(page: any, pageType: string) {
       '[data-cours]',
       '[data-seance]'
     ];
-
-    console.log(`🔍 Recherche elements planning (${pageType})...`);
     
     for (const selector of selectors) {
       const elements = document.querySelectorAll(selector);
-      console.log(`Selecteur "${selector}": ${elements.length} elements trouves`);
       
       if (elements.length > 0) {
         elements.forEach((element, index) => {
@@ -309,27 +272,9 @@ async function extractPlanningEvents(page: any, pageType: string) {
         });
         
         if (events.length > 0) {
-          console.log(`✅ ${events.length} evenements trouves avec "${selector}" sur ${pageType}`);
           break;
         }
       }
-    }
-
-    // Si aucun evenement specifique trouve, essayer de capturer tout le contenu textuel
-    if (events.length === 0) {
-      const bodyText = document.body.innerText;
-      console.log(`⚠️ Aucun evenement structure trouve sur ${pageType}, contenu:`, bodyText.substring(0, 400));
-      
-      // Creer un evenement debug avec le contenu
-      events.push({
-        id: `debug-${pageType}`,
-        title: `Contenu page ${pageType}`,
-        date: new Date().toISOString().split('T')[0],
-        time: 'Debug',
-        room: 'NetYParéo',
-        description: bodyText.substring(0, 300),
-        source: pageType
-      });
     }
 
     return events.slice(0, 12); // Limite par page
@@ -340,16 +285,10 @@ async function extractPlanningEvents(page: any, pageType: string) {
 
 async function scrapeAssignments(page: any) {
   try {
-    console.log('📚 Navigation vers travail-a-faire...');
-    // Naviguer vers la vraie page travail à faire
     await page.goto('https://plan.afpi-bretagne.com/index.php/travail-a-faire/', { 
       waitUntil: 'networkidle2', 
       timeout: 15000 
     });
-
-    // Debug: capturer le contenu de la page travail
-    const pageContent2 = await page.content();
-    console.log('📚 Page travail-à-faire chargée, taille:', pageContent2.length);
 
     const assignments = await page.evaluate(() => {
       const assignments = [];
@@ -364,11 +303,8 @@ async function scrapeAssignments(page: any) {
         'li[class*="devoir"]'
       ];
 
-      console.log('🔍 Recherche de devoirs...');
-
       for (const selector of selectors) {
         const elements = document.querySelectorAll(selector);
-        console.log(`Selecteur devoirs "${selector}": ${elements.length} elements trouves`);
         
         if (elements.length > 0) {
           elements.forEach((element, index) => {
@@ -416,25 +352,9 @@ async function scrapeAssignments(page: any) {
           });
           
           if (assignments.length > 0) {
-            console.log(`✅ ${assignments.length} devoirs trouves avec "${selector}"`);
             break;
           }
         }
-      }
-
-      // Fallback debug
-      if (assignments.length === 0) {
-        const bodyText = document.body.innerText;
-        console.log('⚠️ Aucun devoir trouve, contenu page:', bodyText.substring(0, 300));
-        
-        assignments.push({
-          id: 'debug-assignment',
-          title: 'Contenu page travail-a-faire',
-          subject: 'Debug',
-          dueDate: new Date().toISOString().split('T')[0],
-          status: 'Debug',
-          description: bodyText.substring(0, 250)
-        });
       }
 
       return assignments.slice(0, 12);
@@ -442,15 +362,12 @@ async function scrapeAssignments(page: any) {
 
     return assignments;
   } catch (error) {
-    console.error('Erreur scrapping devoirs:', error);
     return [];
   }
 }
 
 async function scrapeGrades(page: any) {
   try {
-    console.log('📊 Navigation vers bulletin...');
-    // Naviguer vers la vraie page bulletin
     await page.goto('https://plan.afpi-bretagne.com/index.php/apprenant/bulletin/', { 
       waitUntil: 'networkidle2', 
       timeout: 15000 
@@ -491,15 +408,12 @@ async function scrapeGrades(page: any) {
 
     return grades;
   } catch (error) {
-    console.error('Erreur scrapping notes:', error);
     return [];
   }
 }
 
 async function scrapeNews(page: any) {
   try {
-    console.log('📢 Navigation vers accueil (actualités)...');
-    // Naviguer vers la vraie page accueil pour les actualités
     await page.goto('https://plan.afpi-bretagne.com/index.php/apprenant/accueil/', { 
       waitUntil: 'networkidle2', 
       timeout: 15000 
@@ -540,7 +454,6 @@ async function scrapeNews(page: any) {
 
     return news;
   } catch (error) {
-    console.error('Erreur scrapping actualités:', error);
     return [];
   }
 }
