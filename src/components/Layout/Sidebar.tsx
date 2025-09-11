@@ -50,7 +50,7 @@ const personalNavItems = [
   { icon: CalendarDays, label: 'Calendrier', href: '/calendar' },
   { icon: Trello, label: 'Tâches', href: '/devoirs' },
   { icon: BookOpen, label: 'Notes', href: '/notes' },
-  { icon: Target, label: 'Objectifs', href: '/goals' },
+  { icon: Target, label: 'Projets', href: '/projects' },
   { icon: User, label: 'Profil', href: '/profile' },
   { icon: Settings, label: 'Paramètres', href: '/settings' },
 ];

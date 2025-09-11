@@ -1,35 +1,94 @@
-/* Animations pour les notifications */
+/* Project Management Animations */
 
-@keyframes slide-in-right {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes progress-bar {
-  from {
-    width: 100%;
-  }
-  to {
-    width: 0%;
-  }
-}
-
-.animate-slide-in-right {
-  animation: slide-in-right 0.3s ease-out;
-}
-
-.animate-progress-bar {
-  animation: progress-bar 4s linear;
-}
-
-/* Animations d'apparition pour les pages */
+/* Fade-in animation for modals */
 @keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 40px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* Slide down animation for accordions */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.4s ease-out;
+  overflow: hidden;
+}
+
+.accordion-content {
+  transition: all 0.3s ease-out;
+}
+
+/* Enhanced accordion animations with staggered entrance */
+@keyframes accordionSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes accordionItemFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-accordion-slide-in {
+  animation: accordionSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-accordion-item-fade-in {
+  animation: accordionItemFadeIn 0.3s ease-out;
+}
+
+/* Staggered animation delays for multiple items */
+.accordion-item-delay-1 {
+  animation-delay: 0.1s;
+}
+
+.accordion-item-delay-2 {
+  animation-delay: 0.2s;
+}
+
+.accordion-item-delay-3 {
+  animation-delay: 0.3s;
+}
+
+.accordion-item-delay-4 {
+  animation-delay: 0.4s;
+}
+
+/* Modal content animations */
+@keyframes modalContentSlideIn {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -40,119 +99,133 @@
   }
 }
 
-@keyframes fadeInUpSmall {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.animate-modal-content-slide-in {
+  animation: modalContentSlideIn 0.4s ease-out;
 }
 
-@keyframes fadeInUpLarge {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
+/* Task completion animation */
+@keyframes taskComplete {
+  0% {
+    transform: scale(1);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
+.animate-task-complete {
+  animation: taskComplete 0.6s ease-out;
+}
+
+/* Milestone completion animation */
+@keyframes milestoneComplete {
+  0% {
+    transform: scale(1);
   }
-  to {
-    opacity: 1;
+  25% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1.15) rotate(5deg);
+  }
+  75% {
+    transform: scale(1.1) rotate(-5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
   }
 }
 
-/* Classes d'animation */
-.animate-fade-in-up {
-  animation: fadeInUp 0.5s ease-out forwards;
+.animate-milestone-complete {
+  animation: milestoneComplete 0.8s ease-out;
 }
 
-.animate-fade-in-up-small {
-  animation: fadeInUpSmall 0.4s ease-out forwards;
+/* Hover animations */
+.hover\:scale-105:hover {
+  transform: scale(1.05);
 }
 
-.animate-fade-in-up-large {
-  animation: fadeInUpLarge 0.6s ease-out forwards;
+.hover\:scale-110:hover {
+  transform: scale(1.1);
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
+.active\:scale-95:active {
+  transform: scale(0.95);
 }
 
-/* États initiaux pour les animations */
-.animate-fade-in-up,
-.animate-fade-in-up-small,
-.animate-fade-in-up-large,
-.animate-fade-in {
-  opacity: 0;
+.hover\:-translate-y-1:hover {
+  transform: translateY(-0.25rem);
 }
 
-/* Classes simples avec délais */
-.page-animate {
-  animation: fadeInUp 0.6s ease-out forwards;
+/* Smooth transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
 
-.page-animate-delay-1 {
-  animation: fadeInUp 0.5s ease-out forwards;
-  animation-delay: 100ms;
+.transition-colors {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
 
-.page-animate-delay-2 {
-  animation: fadeInUp 0.5s ease-out forwards;
-  animation-delay: 300ms;
+.transition-shadow {
+  transition-property: box-shadow;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
 
-.page-animate-delay-3 {
-  animation: fadeInUp 0.5s ease-out forwards;
-  animation-delay: 500ms;
+.transition-transform {
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
 
-/* Classes d'animations simples avec opacity 0 initial */
-.page-animate,
-.page-animate-delay-1,
-.page-animate-delay-2,
-.page-animate-delay-3 {
-  opacity: 0;
+/* Button and interactive element animations */
+button {
+  transition: all 0.2s ease-out;
 }
 
-/* Support pour prefers-reduced-motion */
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Focus states */
+.focus\:ring-2:focus {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
+.focus\:ring-offset-1:focus {
+  --tw-ring-offset-width: 1px;
+}
+
+/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
-  .animate-fade-in-up-small,
-  .animate-fade-in-up-large,
-  .animate-fade-in,
-  .page-animate,
-  .page-animate-delay-1,
-  .page-animate-delay-2,
-  .page-animate-delay-3 {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
+  .animate-slide-down,
+  .animate-task-complete,
+  .animate-milestone-complete {
+    animation: none;
   }
-}
-
-/* Animations au survol */
-.hover-scale {
-  transition: transform 0.2s ease-out;
-}
-
-.hover-scale:hover {
-  transform: scale(1.02);
-}
-
-.hover-shadow {
-  transition: box-shadow 0.2s ease-out;
-}
-
-.hover-shadow:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  
+  .transition-all,
+  .transition-colors,
+  .transition-shadow,
+  .transition-transform {
+    transition: none;
+  }
+  
+  button:hover {
+    transform: none;
+  }
 }

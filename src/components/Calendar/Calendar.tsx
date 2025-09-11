@@ -252,7 +252,7 @@ export default function Calendar() {
         <div className="transition-all duration-300">
           {viewMode === 'calendar' ? (
             /* Vue Calendrier */
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-4 max-w-5xl mx-auto">
               {/* En-têtes des jours */}
               {dayNames.map(day => (
                 <div key={day} className="p-4 text-center text-base font-medium text-gray-500">

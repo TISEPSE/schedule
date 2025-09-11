@@ -81,8 +81,8 @@ export default function KeyboardShortcuts({ userRole }: KeyboardShortcutsProps) 
         },
         {
           keys: ['Ctrl', 'G'],
-          description: 'Mes objectifs',
-          action: () => router.push('/goals'),
+          description: 'Mes projets',
+          action: () => router.push('/projects'),
           category: 'navigation'
         },
         {

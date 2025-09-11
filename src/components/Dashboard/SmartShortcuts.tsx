@@ -118,10 +118,10 @@ export default function SmartShortcuts({ userRole }: SmartShortcutsProps) {
       },
       {
         id: 'goals-review',
-        title: 'Revoir mes objectifs',
+        title: 'Revoir mes projets',
         description: 'Progression du mois',
         icon: Target,
-        href: '/goals?view=progress',
+        href: '/projects?view=progress',
         color: 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200',
         priority: 7,
         timeContext: 'weekend',

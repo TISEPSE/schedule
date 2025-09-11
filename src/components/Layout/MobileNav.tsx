@@ -4,14 +4,15 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, 
-  Calendar,
   CalendarDays,
   FileText,
   Trello,
   Settings,
   Users,
   Building,
-  User
+  User,
+  BookOpen,
+  Target
 } from 'lucide-react';
 import { UserRole } from '@/types';
 
@@ -24,22 +25,31 @@ const adminNavItems = [
   { icon: Users, label: 'Classes', href: '/classes' },
   { icon: Building, label: 'École', href: '/organization' },
   { icon: Settings, label: 'Config', href: '/settings' },
+  { icon: User, label: 'Profil', href: '/profile' },
 ];
 
 const studentNavItems = [
   { icon: LayoutDashboard, label: 'Accueil', href: '/dashboard' },
-  { icon: Calendar, label: 'Planning', href: '/planning' },
   { icon: CalendarDays, label: 'Calendrier', href: '/calendar' },
   { icon: Trello, label: 'Devoirs', href: '/devoirs' },
-  { icon: FileText, label: 'Notes', href: '/bulletin' },
-  { icon: Users, label: 'Ma classe', href: '/classes' },
-  { icon: User, label: 'Mon profil', href: '/profile' },
-  { icon: Settings, label: 'Paramètres', href: '/settings' },
+  { icon: BookOpen, label: 'Notes', href: '/notes' },
+  { icon: FileText, label: 'Bulletin', href: '/bulletin' },
+  { icon: Users, label: 'Classe', href: '/classes' },
+];
+
+const personalNavItems = [
+  { icon: LayoutDashboard, label: 'Tableau', href: '/dashboard' },
+  { icon: CalendarDays, label: 'Calendrier', href: '/calendar' },
+  { icon: Trello, label: 'Tâches', href: '/devoirs' },
+  { icon: BookOpen, label: 'Notes', href: '/notes' },
+  { icon: Target, label: 'Projets', href: '/projects' },
+  { icon: Settings, label: 'Config', href: '/settings' },
 ];
 
 export default function MobileNav({ userRole }: MobileNavProps) {
   const pathname = usePathname();
-  const navItems = userRole === 'admin' ? adminNavItems : studentNavItems;
+  const navItems = userRole === 'admin' ? adminNavItems : 
+                   userRole === 'personal' ? personalNavItems : studentNavItems;
 
   const isActive = (href: string) => {
     return pathname === href || 

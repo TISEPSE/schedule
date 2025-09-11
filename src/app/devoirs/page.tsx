@@ -12,7 +12,10 @@ import {
   Target,
   CheckCircle,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  Calendar,
+  Filter,
+  SortAsc
 } from 'lucide-react';
 import { getSubjectColors } from '@/lib/colors';
 import CreateAssignmentModal from '@/components/Devoirs/CreateAssignmentModal';
@@ -40,6 +43,8 @@ export default function DevoirsPage() {
     ? 'Organisez et suivez vos tâches personnelles et projets'
     : 'Organisez vos devoirs et suivez votre progression';
   const createButtonText = user?.role === 'personal' ? 'Nouvelle tâche' : 'Nouveau devoir';
+
+  // Connexion avec projets retirée pour simplifier
   
   const { assignments, updateAssignment, createAssignment } = useApiData(user?.id || '');
   
@@ -47,8 +52,10 @@ export default function DevoirsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [localAssignments, setLocalAssignments] = useState<Assignment[]>([]);
   const [pendingUpdates, setPendingUpdates] = useState<Map<string, Assignment>>(new Map());
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'completed' | 'overdue'>('all');
+  const [sortBy, setSortBy] = useState<'dueDate' | 'priority' | 'subject'>('dueDate');
   
-  // Synchroniser l'état local avec les assignments du serveur
+  // Synchroniser l'état local avec les assignments du serveur et les jalons
   useEffect(() => {
     const updatedAssignments = assignments.map(serverAssignment => {
       const pendingUpdate = pendingUpdates.get(serverAssignment.id);
@@ -57,6 +64,7 @@ export default function DevoirsPage() {
       }
       return serverAssignment;
     });
+    
     setLocalAssignments(updatedAssignments);
   }, [assignments, pendingUpdates]);
 
@@ -109,8 +117,33 @@ export default function DevoirsPage() {
     );
   }
 
-  // Afficher toutes les assignments locales
-  const filteredAssignments = localAssignments;
+  // Filtrer et trier les assignments
+  const filteredAssignments = localAssignments
+    .filter(assignment => {
+      switch (filterStatus) {
+        case 'pending':
+          return !assignment.completed && getDaysRemaining(assignment.dueDate) >= 0;
+        case 'completed':
+          return assignment.completed;
+        case 'overdue':
+          return !assignment.completed && getDaysRemaining(assignment.dueDate) < 0;
+        default:
+          return true;
+      }
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'dueDate':
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        case 'priority':
+          const priorityOrder = { high: 3, medium: 2, low: 1 };
+          return priorityOrder[b.priority] - priorityOrder[a.priority];
+        case 'subject':
+          return a.subject.localeCompare(b.subject);
+        default:
+          return 0;
+      }
+    });
 
   // Fonction pour créer un devoir
   const handleCreateAssignment = async (formData: {
@@ -204,7 +237,7 @@ export default function DevoirsPage() {
 
   const getStatusLabel = (assignment: Assignment) => {
     if (assignment.completed) {
-      return 'Juste tâche';
+      return 'Terminée';
     }
     const daysRemaining = getDaysRemaining(assignment.dueDate);
     if (daysRemaining < 0) {
@@ -234,247 +267,217 @@ export default function DevoirsPage() {
             </button>
           </div>
 
-          {/* Statistiques avec design unique */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white border-2 border-blue-200 rounded-2xl p-6 relative overflow-hidden hover:border-blue-300 transition-all duration-200">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-blue-100 rounded-bl-full opacity-50"></div>
-              <div className="relative">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Target className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-4xl font-black text-gray-900">{filteredAssignments.length}</p>
-                  </div>
+          {/* Statistics Cards - Simplified and consistent */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">{localAssignments.length}</p>
+                  <p className="text-sm text-gray-600 mt-1">Total des tâches</p>
                 </div>
-                <div className="border-t border-gray-100 pt-3">
-                  <span className="text-sm font-bold text-gray-800 uppercase tracking-wide">Total</span>
-                  <p className="text-xs text-gray-500 mt-1">Toutes les tâches</p>
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <Target className="h-6 w-6 text-blue-600" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white border-2 border-green-200 rounded-2xl p-6 relative overflow-hidden hover:border-green-300 transition-all duration-200">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-green-100 rounded-bl-full opacity-50"></div>
-              <div className="relative">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                    <CheckCircle className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-4xl font-black text-gray-900">
-                      {filteredAssignments.filter(a => a.completed).length}
-                    </p>
-                  </div>
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {localAssignments.filter(a => a.completed).length}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">Terminées</p>
                 </div>
-                <div className="border-t border-gray-100 pt-3">
-                  <span className="text-sm font-bold text-gray-800 uppercase tracking-wide">Terminées</span>
-                  <p className="text-xs text-gray-500 mt-1">Objectifs atteints</p>
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white border-2 border-orange-200 rounded-2xl p-6 relative overflow-hidden hover:border-orange-300 transition-all duration-200">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-orange-100 rounded-bl-full opacity-50"></div>
-              <div className="relative">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                    <TrendingUp className="h-6 w-6 text-orange-600" />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-4xl font-black text-gray-900">
-                      {filteredAssignments.filter(a => !a.completed && getDaysRemaining(a.dueDate) >= 0).length}
-                    </p>
-                  </div>
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {localAssignments.filter(a => !a.completed && getDaysRemaining(a.dueDate) >= 0).length}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">En cours</p>
                 </div>
-                <div className="border-t border-gray-100 pt-3">
-                  <span className="text-sm font-bold text-gray-800 uppercase tracking-wide">En cours</span>
-                  <p className="text-xs text-gray-500 mt-1">À compléter</p>
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <TrendingUp className="h-6 w-6 text-blue-600" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white border-2 border-red-200 rounded-2xl p-6 relative overflow-hidden hover:border-red-300 transition-all duration-200">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-red-100 rounded-bl-full opacity-50"></div>
-              <div className="relative">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                    <AlertCircle className="h-6 w-6 text-red-600" />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-4xl font-black text-gray-900">
-                      {filteredAssignments.filter(a => !a.completed && getDaysRemaining(a.dueDate) < 0).length}
-                    </p>
-                  </div>
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {localAssignments.filter(a => !a.completed && getDaysRemaining(a.dueDate) < 0).length}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">En retard</p>
                 </div>
-                <div className="border-t border-gray-100 pt-3">
-                  <span className="text-sm font-bold text-gray-800 uppercase tracking-wide">En retard</span>
-                  <p className="text-xs text-gray-500 mt-1">Nécessitent attention</p>
+                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                  <AlertCircle className="h-6 w-6 text-red-600" />
                 </div>
               </div>
             </div>
           </div>
+          
+          {/* Filter and Sort Controls */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-500" />
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as 'all' | 'pending' | 'completed' | 'overdue')}
+                className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              >
+                <option value="all">Toutes les tâches</option>
+                <option value="pending">En cours</option>
+                <option value="completed">Terminées</option>
+                <option value="overdue">En retard</option>
+              </select>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <SortAsc className="h-4 w-4 text-gray-500" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'dueDate' | 'priority' | 'subject')}
+                className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              >
+                <option value="dueDate">Trier par échéance</option>
+                <option value="priority">Trier par priorité</option>
+                <option value="subject">Trier par matière</option>
+              </select>
+            </div>
+          </div>
 
 
-          {/* Liste des tâches modernisée */}
-          <div className="space-y-6">
+          {/* Tasks Grid - Clean and consistent design */}
+          <div className={`${filteredAssignments.length === 0 ? 'text-center py-12' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
             {filteredAssignments.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-600">Aucune tâche pour le moment</p>
+              <div>
+                <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <Target className="h-8 w-8 text-gray-400" />
+                </div>
+                <p className="text-gray-600 text-lg">Aucune tâche trouvée</p>
+                <p className="text-gray-500 text-sm mt-1">Essayez de modifier vos filtres ou créez une nouvelle tâche</p>
               </div>
             ) : (
               filteredAssignments.map((assignment) => {
                 const daysRemaining = getDaysRemaining(assignment.dueDate);
                 const isOverdue = daysRemaining < 0;
                 const subjectColors = getSubjectColors(assignment.subject);
+                // Remove unused variable
                 
                 return (
                   <div 
                     key={assignment.id} 
-                    className={`group relative bg-white rounded-3xl shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-2 transform ${
+                    className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-200 group ${
                       assignment.completed 
-                        ? 'border-l-4 border-green-400 bg-green-50/20' 
+                        ? 'border-l-4 border-l-green-500' 
                         : isOverdue 
-                          ? 'border-l-4 border-red-400 bg-red-50/20'
-                          : 'border-l-4 border-blue-400 hover:border-blue-500'
+                          ? 'border-l-4 border-l-red-500'
+                          : 'border-l-4 border-l-blue-500'
                     }`}
-                    style={{
-                      boxShadow: assignment.completed 
-                        ? '0 8px 25px rgba(34, 197, 94, 0.15), 0 0 0 1px rgba(34, 197, 94, 0.05)' 
-                        : isOverdue 
-                          ? '0 8px 25px rgba(239, 68, 68, 0.15), 0 0 0 1px rgba(239, 68, 68, 0.05)'
-                          : '0 8px 25px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02)'
-                    }}
                   >
-                    {/* Indicateur de priorité sous forme de coin */}
-                    <div className={`absolute top-0 right-0 w-0 h-0 border-l-[20px] border-b-[20px] ${
-                      assignment.priority === 'high' ? 'border-l-red-500 border-b-transparent' :
-                      assignment.priority === 'medium' ? 'border-l-orange-500 border-b-transparent' : 
-                      'border-l-green-500 border-b-transparent'
-                    } rounded-tr-3xl`}></div>
-                    
-                    <div className="p-6 pl-8">
-                      <div className="flex items-start justify-between mb-6">
-                        <div className="flex-1">
-                          <div className="mb-4">
-                            <div className="flex items-center space-x-4 mb-3">
-                              <button
-                                onClick={() => toggleCompletion(assignment.id)}
-                                className="group/checkbox flex-shrink-0 transition-all duration-300 hover:scale-110"
-                              >
-                                {assignment.completed ? (
-                                  <div className="relative h-8 w-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white group-hover/checkbox:shadow-xl transition-all duration-300">
-                                    <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                  </div>
-                                ) : (
-                                  <div className="h-8 w-8 border-3 border-gray-300 rounded-full hover:border-blue-500 transition-all duration-300 group-hover/checkbox:bg-blue-50 group-hover/checkbox:border-blue-400"></div>
-                                )}
-                              </button>
-                              <div className="flex-1">
-                                <h3 className={`text-xl font-bold transition-all duration-200 ${
-                                  assignment.completed 
-                                    ? 'text-green-700 line-through' 
-                                    : 'text-gray-900 group-hover:text-blue-900'
-                                }`}>
-                                  {assignment.title}
-                                </h3>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center space-x-3 mb-4 ml-11">
-                              <span className={`px-3 py-1.5 rounded-xl text-sm font-semibold ${subjectColors.backgroundLight} ${subjectColors.text} border border-current/20`}>
-                                {assignment.subject}
-                              </span>
-                              <span className={`px-3 py-1.5 rounded-xl text-sm font-semibold border ${
-                                assignment.priority === 'high' ? 'bg-red-50 text-red-700 border-red-200' :
-                                assignment.priority === 'medium' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                                'bg-green-50 text-green-700 border-green-200'
-                              }`}>
-                                Priorité {assignment.priority === 'high' ? 'haute' : assignment.priority === 'medium' ? 'moyenne' : 'basse'}
-                              </span>
-                            </div>
+                    {/* Header with checkbox and title */}
+                    <div className="flex items-start gap-4 mb-4">
+                      <button
+                        onClick={() => toggleCompletion(assignment.id)}
+                        className="flex-shrink-0 mt-0.5 transition-all duration-200 hover:scale-105"
+                      >
+                        {assignment.completed ? (
+                          <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                            <CheckCircle className="h-4 w-4 text-white" />
                           </div>
-                          
-                          <div className="ml-11">
-                            <p className={`text-gray-600 mb-4 leading-relaxed ${
-                              assignment.completed ? 'text-gray-500' : ''
-                            }`}>
-                              {assignment.description}
-                            </p>
-                            
-                            {/* Barre de progression avec design unique */}
-                            <div className="mb-4">
-                              <div className="flex justify-between items-center mb-3">
-                                <span className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Progression</span>
-                                <span className={`text-sm font-black px-3 py-1 rounded-full border-2 ${
-                                  assignment.completed ? 'bg-green-100 text-green-800 border-green-200' : 
-                                  'bg-gray-100 text-gray-800 border-gray-200'
-                                }`}>
-                                  {assignment.completed ? 100 : 0}%
-                                </span>
-                              </div>
-                              <div className="relative w-full bg-gray-100 rounded-full h-4 overflow-hidden border border-gray-200">
-                                <div 
-                                  className={`h-4 rounded-full transition-all duration-700 ease-out relative ${
-                                    assignment.completed ? 'bg-green-500' : 
-                                    isOverdue ? 'bg-red-500' : 'bg-blue-500'
-                                  }`}
-                                  style={{ width: `${assignment.completed ? 100 : 0}%` }}
-                                >
-                                  {assignment.completed && (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/20 rounded-full"></div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="text-right ml-6 flex flex-col items-end">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <div className={`p-2 rounded-xl ${
-                              assignment.completed ? 'bg-green-100' :
-                              isOverdue ? 'bg-red-100' : 'bg-blue-100'
-                            }`}>
-                              {getStatusIcon(assignment)}
-                            </div>
-                          </div>
-                          <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
-                            assignment.completed ? 'bg-green-100 text-green-800' :
-                            isOverdue ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {getStatusLabel(assignment)}
+                        ) : (
+                          <div className="w-6 h-6 border-2 border-gray-300 rounded-full hover:border-blue-500 transition-colors" />
+                        )}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <h3 className={`font-semibold text-gray-900 mb-2 line-clamp-2 ${
+                          assignment.completed ? 'line-through text-gray-500' : ''
+                        }`}>
+                          {assignment.title}
+                        </h3>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${subjectColors.backgroundLight} ${subjectColors.text}`}>
+                            {assignment.subject}
                           </span>
-                          <div className={`text-sm font-medium mt-2 ${
-                            isOverdue ? 'text-red-600' : 'text-gray-600'
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            assignment.priority === 'high' ? 'bg-red-100 text-red-800' :
+                            assignment.priority === 'medium' ? 'bg-orange-100 text-orange-800' :
+                            'bg-green-100 text-green-800'
                           }`}>
-                            {formatDueDate(assignment.dueDate)}
-                          </div>
-                          <div className="text-xs text-gray-400 mt-1">
-                            {assignment.dueDate.toLocaleDateString('fr-FR')}
-                          </div>
+                            {assignment.priority === 'high' ? 'Urgent' : 
+                             assignment.priority === 'medium' ? 'Normal' : 'Faible'}
+                          </span>
                         </div>
                       </div>
+                    </div>
 
-                      {/* Actions avec design distinctif */}
-                      <div className="flex justify-end space-x-3 pt-6 mt-6 border-t border-gray-100/50">
-                        <button
-                          onClick={() => handleEditAssignment(assignment)}
-                          className="flex items-center space-x-2 px-5 py-3 text-sm font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border border-blue-200 hover:border-blue-300"
-                        >
-                          <Edit className="h-4 w-4" />
-                          <span>Modifier</span>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAssignment(assignment.id)}
-                          className="flex items-center space-x-2 px-5 py-3 text-sm font-bold text-red-700 bg-red-50 hover:bg-red-100 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border border-red-200 hover:border-red-300"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span>Supprimer</span>
-                        </button>
+                    {/* Description */}
+                    {assignment.description && (
+                      <p className={`text-sm text-gray-600 mb-4 line-clamp-2 ${
+                        assignment.completed ? 'text-gray-500' : ''
+                      }`}>
+                        {assignment.description}
+                      </p>
+                    )}
+
+                    {/* Due date and status */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="h-4 w-4 text-gray-400" />
+                        <span className={`${isOverdue ? 'text-red-600' : 'text-gray-600'}`}>
+                          {formatDueDate(assignment.dueDate)}
+                        </span>
                       </div>
+                      <div className="flex items-center gap-1">
+                        {getStatusIcon(assignment)}
+                        <span className={`text-xs font-medium ${
+                          assignment.completed ? 'text-green-600' :
+                          isOverdue ? 'text-red-600' : 'text-blue-600'
+                        }`}>
+                          {getStatusLabel(assignment)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+                        <span>Progression</span>
+                        <span className="font-medium">{assignment.completed ? '100%' : '0%'}</span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            assignment.completed ? 'bg-green-500' : 
+                            isOverdue ? 'bg-red-500' : 'bg-blue-500'
+                          }`}
+                          style={{ width: assignment.completed ? '100%' : '0%' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-100">
+                      <button
+                        onClick={() => handleEditAssignment(assignment)}
+                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAssignment(assignment.id)}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
                 );

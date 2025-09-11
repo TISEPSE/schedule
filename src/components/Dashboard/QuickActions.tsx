@@ -70,10 +70,10 @@ const personalActions = [
     color: 'bg-green-50 hover:bg-green-100 text-green-700',
   },
   {
-    title: 'Objectifs',
-    description: 'Suivre mes objectifs',
+    title: 'Projets',
+    description: 'Suivre mes projets',
     icon: Target,
-    href: '/goals',
+    href: '/projects',
     color: 'bg-purple-50 hover:bg-purple-100 text-purple-700',
   },
 ];
