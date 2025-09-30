@@ -1,35 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-
-// Types locaux pour éviter les imports de modules serveur
-
-interface Event {
-  id: string;
-  userId: string;
-  title: string;
-  description: string;
-  type: 'course' | 'practical' | 'exam' | 'project' | 'sport' | 'study';
-  startTime: Date;
-  endTime: Date;
-  location?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface Assignment {
-  id: string;
-  userId: string;
-  title: string;
-  description: string;
-  subject: string;
-  type: 'homework' | 'report' | 'essay' | 'study' | 'presentation' | 'research' | 'reading';
-  dueDate: Date;
-  completed: boolean;
-  priority: 'low' | 'medium' | 'high';
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Event, Assignment } from '@/types';
 
 interface DataHookReturn {
   // Data
@@ -342,10 +314,24 @@ export function useApiData(userId: string): DataHookReturn {
     }
   }, [isOnline, syncing, syncWithCloud]);
 
+  // Optimized data computations with useMemo
+  const stats = useMemo(() => ({
+    totalAssignments: assignments.length,
+    completedAssignments: assignments.filter(a => a.completed).length,
+    overdueAssignments: assignments.filter(a => !a.completed && new Date(a.dueDate) < new Date()).length,
+    totalEvents: events.length,
+    todayEvents: events.filter(e => {
+      const eventDate = new Date(e.startTime);
+      const today = new Date();
+      return eventDate.toDateString() === today.toDateString();
+    }).length
+  }), [assignments, events]);
+
   return {
     // Data
     assignments,
     events,
+    stats,
     
     // Loading states
     loading,

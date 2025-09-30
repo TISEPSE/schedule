@@ -175,11 +175,11 @@ export default function AccountTypeSelector({ onSelectType, onCreateAccount }: A
                       <ArrowRight className="h-4 w-4" />
                     </button>
                     
-                    <button 
+                    <button
                       onClick={() => handleCreateAccount(option.type)}
                       className="w-full py-2 px-4 rounded-lg font-medium transition-all duration-200 border border-blue-500 text-blue-600 hover:bg-blue-50 flex items-center justify-center space-x-2"
                     >
-                      <span>Créer un compte {option.title.toLowerCase()}</span>
+                      <span>Créer un {option.title.toLowerCase()}</span>
                     </button>
                   </div>
                 </div>

@@ -170,6 +170,17 @@ export default function ProjectsPage() {
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
+  // Force sync selectedProject when projects change
+  useEffect(() => {
+    if (selectedProject) {
+      const updatedProject = projects.find(p => p.id === selectedProject.id);
+      if (updatedProject && JSON.stringify(updatedProject) !== JSON.stringify(selectedProject)) {
+        console.log('Syncing selectedProject with updated data');
+        setSelectedProject(updatedProject);
+      }
+    }
+  }, [projects, selectedProject]);
+
   // États pour les tâches
   const [addingTaskToStep, setAddingTaskToStep] = useState<string | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -305,13 +316,59 @@ export default function ProjectsPage() {
   }, [newStep, projects, selectedProject, optimizedAddStep]);
 
   const toggleStep = useCallback((stepId: string) => {
-    const updatedProjects = optimizedToggleStep(stepId, projects);
-    setProjects(updatedProjects);
+    console.log('Toggle step clicked:', stepId);
+    const updatedProjects = projects.map(project => ({
+      ...project,
+      steps: project.steps.map(step => {
+        if (step.id === stepId) {
+          console.log('Step before toggle:', step.completed);
+          const newStepCompleted = !step.completed;
+          return {
+            ...step,
+            completed: newStepCompleted,
+            completedAt: newStepCompleted ? new Date() : undefined,
+            // Quand on coche l'étape, toutes les tâches sont cochées aussi
+            // Quand on décoche l'étape, toutes les tâches sont décochées aussi
+            tasks: step.tasks.map(task => ({
+              ...task,
+              completed: newStepCompleted,
+              completedAt: newStepCompleted ? new Date() : undefined
+            }))
+          };
+        }
+        return step;
+      })
+    }));
+
+    // Recalculate project progress
+    const finalProjects = updatedProjects.map(project => {
+      const totalSteps = project.steps.length;
+      const completedSteps = project.steps.filter(step => step.completed).length;
+      const totalTasks = project.steps.reduce((acc, step) => acc + step.tasks.length, 0);
+      const completedTasks = project.steps.reduce((acc, step) => acc + step.tasks.filter(task => task.completed).length, 0);
+
+      let progress = 0;
+      if (totalTasks > 0) {
+        progress = Math.round((completedTasks / totalTasks) * 100);
+      } else if (totalSteps > 0) {
+        progress = Math.round((completedSteps / totalSteps) * 100);
+      }
+
+      return {
+        ...project,
+        progress
+      };
+    });
+
+    console.log('Updated projects with progress:', finalProjects);
+    setProjects(finalProjects);
 
     if (selectedProject) {
-      setSelectedProject(updatedProjects.find(p => p.id === selectedProject.id) || null);
+      const updatedSelectedProject = finalProjects.find(p => p.id === selectedProject.id);
+      console.log('Updated selected project:', updatedSelectedProject);
+      setSelectedProject(updatedSelectedProject || null);
     }
-  }, [projects, selectedProject, optimizedToggleStep]);
+  }, [projects, selectedProject]);
 
   // Fonctions pour les tâches
   const addTask = useCallback((projectId: string, stepId: string, title: string) => {
@@ -324,13 +381,66 @@ export default function ProjectsPage() {
   }, [projects, selectedProject, optimizedAddTask]);
 
   const toggleTask = useCallback((taskId: string) => {
-    const updatedProjects = optimizedToggleTask(taskId, projects);
-    setProjects(updatedProjects);
+    console.log('Toggle task clicked:', taskId);
+    const updatedProjects = projects.map(project => ({
+      ...project,
+      steps: project.steps.map(step => {
+        // Mise à jour des tâches
+        const updatedTasks = step.tasks.map(task => {
+          if (task.id === taskId) {
+            console.log('Task before toggle:', task.completed);
+            return {
+              ...task,
+              completed: !task.completed,
+              completedAt: !task.completed ? new Date() : undefined
+            };
+          }
+          return task;
+        });
+
+        // Vérifier si toutes les tâches de cette étape sont complétées
+        const allTasksCompleted = updatedTasks.length > 0 && updatedTasks.every(task => task.completed);
+        const anyTaskCompleted = updatedTasks.some(task => task.completed);
+
+        return {
+          ...step,
+          tasks: updatedTasks,
+          // L'étape est complétée seulement si TOUTES ses tâches sont complétées
+          completed: allTasksCompleted,
+          completedAt: allTasksCompleted ? new Date() : (!anyTaskCompleted ? undefined : step.completedAt)
+        };
+      })
+    }));
+
+    // Recalculate project progress
+    const finalProjects = updatedProjects.map(project => {
+      const totalSteps = project.steps.length;
+      const completedSteps = project.steps.filter(step => step.completed).length;
+      const totalTasks = project.steps.reduce((acc, step) => acc + step.tasks.length, 0);
+      const completedTasks = project.steps.reduce((acc, step) => acc + step.tasks.filter(task => task.completed).length, 0);
+
+      let progress = 0;
+      if (totalTasks > 0) {
+        progress = Math.round((completedTasks / totalTasks) * 100);
+      } else if (totalSteps > 0) {
+        progress = Math.round((completedSteps / totalSteps) * 100);
+      }
+
+      return {
+        ...project,
+        progress
+      };
+    });
+
+    console.log('Updated projects with progress:', finalProjects);
+    setProjects(finalProjects);
 
     if (selectedProject) {
-      setSelectedProject(updatedProjects.find(p => p.id === selectedProject.id) || null);
+      const updatedSelectedProject = finalProjects.find(p => p.id === selectedProject.id);
+      console.log('Updated selected project:', updatedSelectedProject);
+      setSelectedProject(updatedSelectedProject || null);
     }
-  }, [projects, selectedProject, optimizedToggleTask]);
+  }, [projects, selectedProject]);
 
   const toggleExpanded = (projectId: string) => {
     const newExpanded = new Set(expandedProjects);
@@ -932,101 +1042,149 @@ export default function ProjectsPage() {
           </div>
         )}
 
-        {/* Modal Ajouter une Étape */}
+        {/* Modal Ajouter une Étape - Design moderne et attractif */}
         {isAddStepModalOpen && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl max-w-md w-full p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Nouvelle Étape</h3>
-                <button
-                  onClick={() => setIsAddStepModalOpen(false)}
-                  className="p-1 text-gray-500 hover:bg-gray-100 rounded transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in">
+            <div
+              className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-gray-100 animate-in slide-in-from-bottom-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header avec design moderne et gradient */}
+              <div className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 rounded-t-2xl p-6 text-white">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-transparent to-indigo-600/20 rounded-t-2xl"></div>
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                      <Plus className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold">Nouvelle Étape</h3>
+                      <p className="text-blue-100 text-sm mt-1">Ajoutez une étape à votre projet</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsAddStepModalOpen(false)}
+                    className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-all duration-200 hover:scale-105"
+                    title="Fermer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Projet
+              {/* Corps du modal avec padding et espacement améliorés */}
+              <div className="p-6 space-y-5">
+                {/* Sélection du projet avec icône */}
+                <div className="space-y-2">
+                  <label className="flex items-center text-sm font-semibold text-gray-800 mb-3">
+                    <Target className="h-4 w-4 mr-2 text-blue-600" />
+                    Projet associé
                   </label>
-                  <select
-                    value={newStep.projectId}
-                    onChange={(e) => setNewStep({ ...newStep, projectId: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Sélectionner un projet</option>
-                    {projects.map(project => (
-                      <option key={project.id} value={project.id}>{project.title}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={newStep.projectId}
+                      onChange={(e) => setNewStep({ ...newStep, projectId: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer text-gray-900 font-medium"
+                    >
+                      <option value="">Sélectionner un projet</option>
+                      {projects.map(project => (
+                        <option key={project.id} value={project.id}>{project.title}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Titre de l&apos;étape
+                {/* Titre de l'étape avec icône */}
+                <div className="space-y-2">
+                  <label className="flex items-center text-sm font-semibold text-gray-800 mb-3">
+                    <Trello className="h-4 w-4 mr-2 text-blue-600" />
+                    Titre de l'étape
                   </label>
                   <input
                     type="text"
                     value={newStep.title}
                     onChange={(e) => setNewStep({ ...newStep, title: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Ex: Terminer la configuration"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
+                    placeholder="Ex: Terminer la configuration initiale"
                     autoFocus
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                {/* Description avec icône */}
+                <div className="space-y-2">
+                  <label className="flex items-center text-sm font-semibold text-gray-800 mb-3">
+                    <div className="h-4 w-4 mr-2 text-blue-600">
+                      <svg fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    Description (optionnel)
+                  </label>
                   <textarea
                     value={newStep.description}
                     onChange={(e) => setNewStep({ ...newStep, description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    rows={2}
-                    placeholder="Description de l&apos;étape..."
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500 resize-none"
+                    rows={3}
+                    placeholder="Décrivez cette étape en détail..."
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Priorité</label>
-                    <select
-                      value={newStep.priority}
-                      onChange={(e) => setNewStep({ ...newStep, priority: e.target.value as 'low' | 'medium' | 'high' })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="low">Basse</option>
-                      <option value="medium">Moyenne</option>
-                      <option value="high">Haute</option>
-                    </select>
+                {/* Grille pour priorité et date */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Priorité avec icône et couleurs */}
+                  <div className="space-y-2">
+                    <label className="flex items-center text-sm font-semibold text-gray-800 mb-3">
+                      <AlertCircle className="h-4 w-4 mr-2 text-orange-600" />
+                      Niveau de priorité
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={newStep.priority}
+                        onChange={(e) => setNewStep({ ...newStep, priority: e.target.value as 'low' | 'medium' | 'high' })}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer text-gray-900 font-medium"
+                      >
+                        <option value="low">🟢 Priorité faible</option>
+                        <option value="medium">🟡 Priorité normale</option>
+                        <option value="high">🔴 Priorité élevée</option>
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Date d&apos;échéance</label>
+                  {/* Date d'échéance avec icône */}
+                  <div className="space-y-2">
+                    <label className="flex items-center text-sm font-semibold text-gray-800 mb-3">
+                      <Clock className="h-4 w-4 mr-2 text-green-600" />
+                      Date d'échéance
+                    </label>
                     <input
                       type="date"
                       value={newStep.dueDate}
                       onChange={(e) => setNewStep({ ...newStep, dueDate: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="flex space-x-3 mt-6">
+              {/* Footer avec boutons stylisés */}
+              <div className="flex space-x-3 p-6 pt-0">
                 <button
                   onClick={() => setIsAddStepModalOpen(false)}
-                  className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-semibold hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={addStep}
                   disabled={!newStep.title.trim() || !newStep.projectId}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl transition-all duration-200 font-semibold hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
-                  Ajouter
+                  <span className="flex items-center justify-center">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Créer l'étape
+                  </span>
                 </button>
               </div>
             </div>

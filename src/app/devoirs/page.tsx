@@ -3,22 +3,20 @@
 import { useAuth } from '@/context/AuthContext';
 import { redirect } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useApiData } from '@/hooks/useApiData';
 import { 
   Plus, 
-  Edit, 
-  Trash2, 
   Target,
   CheckCircle,
   TrendingUp,
   AlertCircle,
-  Calendar,
   Filter,
   SortAsc
 } from 'lucide-react';
-import { getSubjectColors } from '@/lib/colors';
+import { getDaysRemaining } from '@/lib/dateUtils';
 import CreateAssignmentModal from '@/components/Devoirs/CreateAssignmentModal';
+import AssignmentCard from '@/components/Assignments/AssignmentCard';
 
 interface Assignment {
   id: string;
@@ -117,36 +115,38 @@ export default function DevoirsPage() {
     );
   }
 
-  // Filtrer et trier les assignments
-  const filteredAssignments = localAssignments
-    .filter(assignment => {
-      switch (filterStatus) {
-        case 'pending':
-          return !assignment.completed && getDaysRemaining(assignment.dueDate) >= 0;
-        case 'completed':
-          return assignment.completed;
-        case 'overdue':
-          return !assignment.completed && getDaysRemaining(assignment.dueDate) < 0;
-        default:
-          return true;
-      }
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'dueDate':
-          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-        case 'priority':
-          const priorityOrder = { high: 3, medium: 2, low: 1 };
-          return priorityOrder[b.priority] - priorityOrder[a.priority];
-        case 'subject':
-          return a.subject.localeCompare(b.subject);
-        default:
-          return 0;
-      }
-    });
+  // Filtrer et trier les assignments avec useMemo pour optimiser les performances
+  const filteredAssignments = useMemo(() => {
+    return localAssignments
+      .filter(assignment => {
+        switch (filterStatus) {
+          case 'pending':
+            return !assignment.completed && getDaysRemaining(assignment.dueDate) >= 0;
+          case 'completed':
+            return assignment.completed;
+          case 'overdue':
+            return !assignment.completed && getDaysRemaining(assignment.dueDate) < 0;
+          default:
+            return true;
+        }
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case 'dueDate':
+            return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+          case 'priority':
+            const priorityOrder = { high: 3, medium: 2, low: 1 };
+            return priorityOrder[b.priority] - priorityOrder[a.priority];
+          case 'subject':
+            return a.subject.localeCompare(b.subject);
+          default:
+            return 0;
+        }
+      });
+  }, [localAssignments, filterStatus, sortBy]);
 
-  // Fonction pour créer un devoir
-  const handleCreateAssignment = async (formData: {
+  // Fonctions optimisées avec useCallback
+  const handleCreateAssignment = useCallback(async (formData: {
     title: string;
     description: string;
     subject: string;
@@ -161,19 +161,21 @@ export default function DevoirsPage() {
       priority: formData.priority,
       completed: false
     });
-  };
+  }, [createAssignment]);
 
-  const handleEditAssignment = (assignment: Assignment) => {
+  const handleEditAssignment = useCallback((assignment: Assignment) => {
     console.log('Édition du devoir:', assignment.id);
-  };
+    // TODO: Implémenter l'édition
+  }, []);
 
-  const handleDeleteAssignment = async (assignmentId: string) => {
+  const handleDeleteAssignment = useCallback(async (assignmentId: string) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce devoir ?')) {
       console.log('Suppression du devoir:', assignmentId);
+      // TODO: Implémenter la suppression
     }
-  };
+  }, []);
 
-  const toggleCompletion = (assignmentId: string) => {
+  const toggleCompletion = useCallback((assignmentId: string) => {
     const assignment = localAssignments.find(a => a.id === assignmentId);
     if (!assignment) return;
 
@@ -191,63 +193,9 @@ export default function DevoirsPage() {
       newMap.set(assignmentId, updatedAssignment);
       return newMap;
     });
-  };
+  }, [localAssignments]);
 
-  const formatDueDate = (dueDate: Date) => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    if (dueDate.toDateString() === today.toDateString()) {
-      return "Aujourd'hui";
-    } else if (dueDate.toDateString() === tomorrow.toDateString()) {
-      return 'Demain';
-    } else {
-      const daysDiff = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysDiff > 0 && daysDiff <= 7) {
-        return `Dans ${daysDiff} jours`;
-      } else if (daysDiff < 0) {
-        return `En retard de ${Math.abs(daysDiff)} jours`;
-      } else {
-        return dueDate.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
-      }
-    }
-  };
 
-  const getDaysRemaining = (dueDate: Date) => {
-    const today = new Date();
-    const diffTime = dueDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const getStatusIcon = (assignment: Assignment) => {
-    if (assignment.completed) {
-      return <CheckCircle className="h-5 w-5 text-green-500" />;
-    }
-    const daysRemaining = getDaysRemaining(assignment.dueDate);
-    if (daysRemaining < 0) {
-      return <AlertCircle className="h-5 w-5 text-red-500" />;
-    }
-    if (daysRemaining <= 1) {
-      return <AlertCircle className="h-5 w-5 text-orange-500" />;
-    }
-    return <TrendingUp className="h-5 w-5 text-blue-500" />;
-  };
-
-  const getStatusLabel = (assignment: Assignment) => {
-    if (assignment.completed) {
-      return 'Terminée';
-    }
-    const daysRemaining = getDaysRemaining(assignment.dueDate);
-    if (daysRemaining < 0) {
-      return 'En retard';
-    }
-    if (daysRemaining <= 1) {
-      return 'Urgent';
-    }
-    return 'En cours';
-  };
 
   return (
     <MainLayout user={user} onLogout={logout}>
@@ -366,122 +314,15 @@ export default function DevoirsPage() {
                 <p className="text-gray-500 text-sm mt-1">Essayez de modifier vos filtres ou créez une nouvelle tâche</p>
               </div>
             ) : (
-              filteredAssignments.map((assignment) => {
-                const daysRemaining = getDaysRemaining(assignment.dueDate);
-                const isOverdue = daysRemaining < 0;
-                const subjectColors = getSubjectColors(assignment.subject);
-                // Remove unused variable
-                
-                return (
-                  <div 
-                    key={assignment.id} 
-                    className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-200 group ${
-                      assignment.completed 
-                        ? 'border-l-4 border-l-green-500' 
-                        : isOverdue 
-                          ? 'border-l-4 border-l-red-500'
-                          : 'border-l-4 border-l-blue-500'
-                    }`}
-                  >
-                    {/* Header with checkbox and title */}
-                    <div className="flex items-start gap-4 mb-4">
-                      <button
-                        onClick={() => toggleCompletion(assignment.id)}
-                        className="flex-shrink-0 mt-0.5 transition-all duration-200 hover:scale-105"
-                      >
-                        {assignment.completed ? (
-                          <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                            <CheckCircle className="h-4 w-4 text-white" />
-                          </div>
-                        ) : (
-                          <div className="w-6 h-6 border-2 border-gray-300 rounded-full hover:border-blue-500 transition-colors" />
-                        )}
-                      </button>
-                      <div className="flex-1 min-w-0">
-                        <h3 className={`font-semibold text-gray-900 mb-2 line-clamp-2 ${
-                          assignment.completed ? 'line-through text-gray-500' : ''
-                        }`}>
-                          {assignment.title}
-                        </h3>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${subjectColors.backgroundLight} ${subjectColors.text}`}>
-                            {assignment.subject}
-                          </span>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            assignment.priority === 'high' ? 'bg-red-100 text-red-800' :
-                            assignment.priority === 'medium' ? 'bg-orange-100 text-orange-800' :
-                            'bg-green-100 text-green-800'
-                          }`}>
-                            {assignment.priority === 'high' ? 'Urgent' : 
-                             assignment.priority === 'medium' ? 'Normal' : 'Faible'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    {assignment.description && (
-                      <p className={`text-sm text-gray-600 mb-4 line-clamp-2 ${
-                        assignment.completed ? 'text-gray-500' : ''
-                      }`}>
-                        {assignment.description}
-                      </p>
-                    )}
-
-                    {/* Due date and status */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="h-4 w-4 text-gray-400" />
-                        <span className={`${isOverdue ? 'text-red-600' : 'text-gray-600'}`}>
-                          {formatDueDate(assignment.dueDate)}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {getStatusIcon(assignment)}
-                        <span className={`text-xs font-medium ${
-                          assignment.completed ? 'text-green-600' :
-                          isOverdue ? 'text-red-600' : 'text-blue-600'
-                        }`}>
-                          {getStatusLabel(assignment)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Progress bar */}
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-                        <span>Progression</span>
-                        <span className="font-medium">{assignment.completed ? '100%' : '0%'}</span>
-                      </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            assignment.completed ? 'bg-green-500' : 
-                            isOverdue ? 'bg-red-500' : 'bg-blue-500'
-                          }`}
-                          style={{ width: assignment.completed ? '100%' : '0%' }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-100">
-                      <button
-                        onClick={() => handleEditAssignment(assignment)}
-                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteAssignment(assignment.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
+              filteredAssignments.map((assignment) => (
+                <AssignmentCard
+                  key={assignment.id}
+                  assignment={assignment}
+                  onToggleCompletion={toggleCompletion}
+                  onEdit={handleEditAssignment}
+                  onDelete={handleDeleteAssignment}
+                />
+              ))
             )}
           </div>
         </div>

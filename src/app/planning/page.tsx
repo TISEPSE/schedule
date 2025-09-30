@@ -21,6 +21,7 @@ import {
   Download,
   Globe
 } from 'lucide-react';
+import { getDayName, getWeekDates, getNextDateForDay, isToday } from '@/lib/dateUtils';
 
 // Types pour les filtres
 type FilterType = 'all' | 'courses' | 'assignments' | 'exams' | 'tasks' | 'events';
@@ -45,11 +46,6 @@ interface WeeklyItem {
 
 import { getItemColors } from '@/lib/colors';
 
-const getDayName = (date: Date) => {
-  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  return days[date.getDay()];
-};
-
 export default function PlanningPage() {
   const { user, logout } = useAuth();
   const { events } = useApiData(user?.id || '');
@@ -72,21 +68,6 @@ export default function PlanningPage() {
     return null;
   }
 
-  // Calculer les dates de la semaine (lundi à dimanche)
-  const getWeekDates = (date: Date) => {
-    const week = [];
-    const startOfWeek = new Date(date);
-    const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Lundi = 1
-    startOfWeek.setDate(diff);
-
-    for (let i = 0; i < 7; i++) {
-      const weekDay = new Date(startOfWeek);
-      weekDay.setDate(startOfWeek.getDate() + i);
-      week.push(weekDay);
-    }
-    return week;
-  };
 
   const weekDates = getWeekDates(currentWeek);
   const weekStart = weekDates[0];
@@ -227,26 +208,6 @@ export default function PlanningPage() {
     }
   };
 
-  // Fonction pour obtenir la prochaine date d'un jour donné
-  const getNextDateForDay = (dayName: string): Date => {
-    const daysMap: { [key: string]: number } = {
-      'dimanche': 0, 'lundi': 1, 'mardi': 2, 'mercredi': 3,
-      'jeudi': 4, 'vendredi': 5, 'samedi': 6
-    };
-    
-    const targetDay = daysMap[dayName.toLowerCase()];
-    const today = new Date();
-    const currentDay = today.getDay();
-    
-    let daysUntilTarget = targetDay - currentDay;
-    if (daysUntilTarget <= 0) {
-      daysUntilTarget += 7; // Prochaine semaine
-    }
-    
-    const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + daysUntilTarget);
-    return targetDate;
-  };
 
   const handleImportFromPlatform = async () => {
     setIsImporting(true);
@@ -389,7 +350,7 @@ export default function PlanningPage() {
               {dayKeys.map((dayKey, index) => {
                 const dayItems = itemsByDay[dayKey] || [];
                 const dayDate = weekDates[index];
-                const isToday = dayDate.toDateString() === new Date().toDateString();
+                const todayCheckDesktop = isToday(dayDate);
                 const isWeekend = dayKey === 'saturday' || dayKey === 'sunday';
 
                 return (
@@ -401,7 +362,7 @@ export default function PlanningPage() {
                   <div className="text-center mb-4 pb-3 border-b border-gray-200">
                     <div className="font-semibold text-gray-900 mb-2">{dayNames[index]}</div>
                     <div className={`text-2xl font-bold w-10 h-10 mx-auto rounded-full flex items-center justify-center transition-colors ${
-                      isToday 
+                      todayCheckDesktop 
                         ? 'bg-blue-500 text-white shadow-md' 
                         : 'text-gray-600 bg-gray-100 hover:bg-gray-200'
                     }`}>
@@ -478,11 +439,11 @@ export default function PlanningPage() {
             {dayKeys.map((dayKey, index) => {
               const dayItems = itemsByDay[dayKey] || [];
               const dayDate = weekDates[index];
-              const isToday = dayDate.toDateString() === new Date().toDateString();
+              const todayCheck = isToday(dayDate);
               const isWeekend = dayKey === 'saturday' || dayKey === 'sunday';
 
               // Ne montrer que les jours avec du contenu + aujourd'hui
-              if (!isToday && dayItems.length === 0) return null;
+              if (!todayCheck && dayItems.length === 0) return null;
 
               return (
                 <div 
@@ -493,7 +454,7 @@ export default function PlanningPage() {
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-t-xl">
                     <div className="flex items-center space-x-3">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
-                        isToday 
+                        todayCheck 
                           ? 'bg-blue-500 text-white shadow-md' 
                           : 'bg-white text-gray-700 border border-gray-200'
                       }`}>
@@ -504,7 +465,7 @@ export default function PlanningPage() {
                         <p className="text-sm text-gray-500">{dayItems.length} événement(s)</p>
                       </div>
                     </div>
-                    {isToday && (
+                    {todayCheck && (
                       <div className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">
                         Aujourd&apos;hui
                       </div>

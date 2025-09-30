@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo, useCallback } from 'react';
 import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
 import Header from './Header';
@@ -13,7 +13,7 @@ interface MainLayoutProps {
   onLogout: () => void;
 }
 
-export default function MainLayout({ user, children, onLogout }: MainLayoutProps) {
+const MainLayout = memo(function MainLayout({ user, children, onLogout }: MainLayoutProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     // Initialiser directement avec la valeur du localStorage si disponible
     if (typeof window !== 'undefined') {
@@ -23,11 +23,11 @@ export default function MainLayout({ user, children, onLogout }: MainLayoutProps
     return false;
   });
 
-  const handleToggle = () => {
+  const handleToggle = useCallback(() => {
     const newState = !isSidebarCollapsed;
     setIsSidebarCollapsed(newState);
     localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
-  };
+  }, [isSidebarCollapsed]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -79,4 +79,6 @@ export default function MainLayout({ user, children, onLogout }: MainLayoutProps
       </div>
     </div>
   );
-}
+});
+
+export default MainLayout;

@@ -1,18 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect } from 'react';
-
-// Types locaux pour éviter les imports de modules serveur
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: 'student' | 'admin' | 'personal';
-  avatar?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { User } from '@/types';
 
 interface AuthContextType {
   user: User | null;
