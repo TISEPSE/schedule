@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { X, BookOpen, Calendar, Flag, FileText } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, BookOpen, Calendar, Flag, FileText, Circle, AlertTriangle, Zap } from 'lucide-react';
 
 interface CreateAssignmentModalProps {
   isOpen: boolean;
@@ -31,9 +31,9 @@ const SUBJECTS = [
 ];
 
 const PRIORITY_OPTIONS = [
-  { value: 'low', label: 'Faible', color: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: '🟢' },
-  { value: 'medium', label: 'Normale', color: 'bg-amber-100 text-amber-700 border-amber-200', icon: '🟡' },
-  { value: 'high', label: 'Urgente', color: 'bg-red-100 text-red-700 border-red-200', icon: '🔴' }
+  { value: 'low', label: 'Faible', color: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: Circle },
+  { value: 'medium', label: 'Normale', color: 'bg-amber-100 text-amber-700 border-amber-200', icon: AlertTriangle },
+  { value: 'high', label: 'Urgente', color: 'bg-red-100 text-red-700 border-red-200', icon: Zap }
 ];
 
 export default function CreateAssignmentModal({ isOpen, onClose, onSubmit }: CreateAssignmentModalProps) {
@@ -105,23 +105,38 @@ export default function CreateAssignmentModal({ isOpen, onClose, onSubmit }: Cre
   };
 
   const handleClose = () => {
-    setFormData({ 
-      title: '', 
-      description: '', 
-      subject: '', 
-      dueDate: '', 
-      priority: 'medium' 
+    setFormData({
+      title: '',
+      description: '',
+      subject: '',
+      dueDate: '',
+      priority: 'medium'
     });
     setErrors({});
     onClose();
   };
 
+  // Empêcher le scroll du body quand le modal est ouvert
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = '15px';
+    } else {
+      document.body.style.overflow = 'auto';
+      document.body.style.paddingRight = '0';
+    }
+
+    return () => {
+      document.body.style.overflow = 'auto';
+      document.body.style.paddingRight = '0';
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black/20 flex items-center justify-center z-50 p-4" onClick={handleClose}>
-      <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl border border-gray-100 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/20 flex items-center justify-center z-50 p-4 overflow-y-auto" onClick={handleClose}>
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-gray-100 overflow-hidden my-8" onClick={(e) => e.stopPropagation()}>
         
         {/* Header coloré */}
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white relative overflow-hidden">
@@ -148,7 +163,7 @@ export default function CreateAssignmentModal({ isOpen, onClose, onSubmit }: Cre
           <div className="absolute -top-3 -left-3 w-16 h-16 bg-white/5 rounded-full"></div>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 space-y-3">
           {/* Titre */}
           <div>
             <label className="flex items-center space-x-2 text-sm font-semibold text-gray-900 mb-3">
@@ -159,7 +174,7 @@ export default function CreateAssignmentModal({ isOpen, onClose, onSubmit }: Cre
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-500 ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 ${
                 errors.title ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
               }`}
               placeholder="Ex: Exercices de mathématiques chapitre 5"
@@ -173,7 +188,7 @@ export default function CreateAssignmentModal({ isOpen, onClose, onSubmit }: Cre
           </div>
 
           {/* Matière et Priorité sur la même ligne */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             {/* Matière */}
             <div>
               <label className="flex items-center space-x-2 text-sm font-semibold text-gray-900 mb-3">
@@ -183,7 +198,7 @@ export default function CreateAssignmentModal({ isOpen, onClose, onSubmit }: Cre
               <select
                 value={formData.subject}
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-200 text-gray-900 ${
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-200 text-gray-900 ${
                   errors.subject ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
@@ -208,21 +223,21 @@ export default function CreateAssignmentModal({ isOpen, onClose, onSubmit }: Cre
                 <Flag className="h-4 w-4 text-orange-500" />
                 <span>Priorité</span>
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1">
                 {PRIORITY_OPTIONS.map((option) => (
                   <button
                     key={option.value}
                     type="button"
                     onClick={() => setFormData({ ...formData, priority: option.value as 'low' | 'medium' | 'high' })}
-                    className={`p-3 border-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
-                      formData.priority === option.value 
-                        ? option.color + ' scale-105' 
-                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    className={`p-2 border rounded-lg text-xs font-semibold transition-all duration-200 ${
+                      formData.priority === option.value
+                        ? option.color + ' scale-105'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                     }`}
                   >
-                    <div className="flex flex-col items-center space-y-1">
-                      <span className="text-lg">{option.icon}</span>
-                      <span>{option.label}</span>
+                    <div className="flex flex-col items-center space-y-0.5">
+                      <option.icon className="h-4 w-4" />
+                      <span className="text-xs">{option.label}</span>
                     </div>
                   </button>
                 ))}
@@ -240,7 +255,7 @@ export default function CreateAssignmentModal({ isOpen, onClose, onSubmit }: Cre
               type="date"
               value={formData.dueDate.split('T')[0]}
               onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-              className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 text-gray-500 ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 text-gray-900 ${
                 errors.dueDate ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
               }`}
               min={new Date().toISOString().slice(0, 10)}
@@ -262,18 +277,18 @@ export default function CreateAssignmentModal({ isOpen, onClose, onSubmit }: Cre
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 hover:border-gray-300 transition-all duration-200 resize-none text-gray-500"
-              placeholder="Décrivez les détails du devoir, les consignes particulières..."
-              rows={4}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 hover:border-gray-300 transition-all duration-200 resize-none text-gray-900"
+              placeholder="Détails du devoir..."
+              rows={2}
             />
           </div>
           
           {/* Boutons d'action */}
-          <div className="flex items-center justify-end space-x-4 pt-4 border-t border-gray-100">
+          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-gray-100">
             <button
               type="button"
               onClick={handleClose}
-              className="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold transition-colors rounded-xl hover:bg-gray-50"
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 font-semibold transition-colors rounded-lg hover:bg-gray-50"
               disabled={isSubmitting}
             >
               Annuler
@@ -281,7 +296,7 @@ export default function CreateAssignmentModal({ isOpen, onClose, onSubmit }: Cre
             <button
               type="submit"
               disabled={isSubmitting || !formData.title || !formData.subject || !formData.dueDate}
-              className="flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:cursor-not-allowed"
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>

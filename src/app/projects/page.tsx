@@ -4,7 +4,11 @@ import { useAuth } from '@/context/AuthContext';
 import { redirect } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
 import { Target, Plus, TrendingUp, CheckCircle, AlertCircle, Clock, Play, Trello, X, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  recalculateMultipleProjects
+} from '@/utils/progressCalculator';
+import useProjectProgress from '@/hooks/useProjectProgress';
 
 interface Project {
   id: string;
@@ -46,13 +50,22 @@ interface Task {
 
 export default function ProjectsPage() {
   const { user, logout } = useAuth();
-  
+  const {
+    toggleStep: optimizedToggleStep,
+    toggleTask: optimizedToggleTask,
+    addTask: optimizedAddTask,
+    addStep: optimizedAddStep,
+    createProject: optimizedCreateProject,
+    getProjectStats
+  } = useProjectProgress();
+
   if (!user || user.role !== 'personal') {
     redirect('/');
   }
 
-  // États pour la gestion des données
-  const [projects, setProjects] = useState<Project[]>([
+  // Initialize projects with calculated progress
+  const initialProjects = useMemo(() => {
+    const rawProjects: Project[] = [
     {
       id: '1',
       title: 'Maîtriser Next.js 15',
@@ -119,7 +132,14 @@ export default function ProjectsPage() {
         },
       ],
     },
-  ]);
+  ];
+
+    // Calculate initial progress for all projects
+    return recalculateMultipleProjects(rawProjects);
+  }, []);
+
+  // États pour la gestion des données
+  const [projects, setProjects] = useState<Project[]>(initialProjects);
 
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
@@ -172,23 +192,6 @@ export default function ProjectsPage() {
   });
 
   // Utility functions
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'border-red-200 text-red-700 bg-red-50';
-      case 'medium': return 'border-yellow-200 text-yellow-700 bg-yellow-50';
-      case 'low': return 'border-green-200 text-green-700 bg-green-50';
-      default: return 'border-gray-200 text-gray-700 bg-gray-50';
-    }
-  };
-
-  const getPriorityBorderColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'border-l-red-200';
-      case 'medium': return 'border-l-yellow-200';
-      case 'low': return 'border-l-green-200';
-      default: return 'border-l-gray-200';
-    }
-  };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -233,23 +236,22 @@ export default function ProjectsPage() {
   };
 
   // Fonctions CRUD pour les projets
-  const createProject = () => {
+  const createProject = useCallback(() => {
     if (!newProject.title.trim()) return;
 
-    const project: Project = {
-      id: `project-${Date.now()}`,
+    const projectData = {
       title: newProject.title.trim(),
       description: newProject.description.trim(),
       category: newProject.category,
       priority: newProject.priority,
       targetDate: newProject.targetDate ? new Date(newProject.targetDate) : new Date(),
-      status: 'not-started',
-      progress: 0,
       steps: [],
       createdAt: new Date()
     };
 
-    setProjects([...projects, project]);
+    const updatedProjects = optimizedCreateProject(projectData, projects);
+    setProjects(updatedProjects);
+
     setNewProject({
       title: '',
       description: '',
@@ -258,7 +260,7 @@ export default function ProjectsPage() {
       targetDate: ''
     });
     setIsCreateProjectModalOpen(false);
-  };
+  }, [newProject, projects, optimizedCreateProject]);
 
   const deleteProject = (projectId: string) => {
     setProjects(projects.filter(p => p.id !== projectId));
@@ -270,11 +272,10 @@ export default function ProjectsPage() {
   };
 
   // Fonctions pour les étapes
-  const addStep = () => {
+  const addStep = useCallback(() => {
     if (!newStep.title.trim() || !newStep.projectId) return;
 
-    const step: Step = {
-      id: `step-${Date.now()}`,
+    const stepData = {
       projectId: newStep.projectId,
       projectTitle: projects.find(p => p.id === newStep.projectId)?.title || '',
       title: newStep.title.trim(),
@@ -282,19 +283,12 @@ export default function ProjectsPage() {
       completed: false,
       priority: newStep.priority,
       dueDate: newStep.dueDate ? new Date(newStep.dueDate) : undefined,
-      tasks: [],
-      progress: 0
+      tasks: []
     };
 
-    const updatedProjects = projects.map(project => {
-      if (project.id === newStep.projectId) {
-        return { ...project, steps: [...project.steps, step] };
-      }
-      return project;
-    });
-
+    const updatedProjects = optimizedAddStep(newStep.projectId, stepData, projects);
     setProjects(updatedProjects);
-    
+
     // Mise à jour du projet sélectionné si nécessaire
     if (selectedProject?.id === newStep.projectId) {
       setSelectedProject(updatedProjects.find(p => p.id === newStep.projectId) || null);
@@ -308,86 +302,35 @@ export default function ProjectsPage() {
       dueDate: ''
     });
     setIsAddStepModalOpen(false);
-  };
+  }, [newStep, projects, selectedProject, optimizedAddStep]);
 
-  const toggleStep = (stepId: string) => {
-    const updatedProjects = projects.map(project => ({
-      ...project,
-      steps: project.steps.map(step => {
-        if (step.id === stepId) {
-          return {
-            ...step,
-            completed: !step.completed,
-            completedAt: !step.completed ? new Date() : undefined
-          };
-        }
-        return step;
-      })
-    }));
-
+  const toggleStep = useCallback((stepId: string) => {
+    const updatedProjects = optimizedToggleStep(stepId, projects);
     setProjects(updatedProjects);
-    
+
     if (selectedProject) {
       setSelectedProject(updatedProjects.find(p => p.id === selectedProject.id) || null);
     }
-  };
+  }, [projects, selectedProject, optimizedToggleStep]);
 
   // Fonctions pour les tâches
-  const addTask = (projectId: string, stepId: string, title: string) => {
-    const task: Task = {
-      id: `task-${Date.now()}`,
-      stepId: stepId,
-      title: title.trim(),
-      completed: false,
-      priority: 'medium'
-    };
-
-    const updatedProjects = projects.map(project => {
-      if (project.id === projectId) {
-        return {
-          ...project,
-          steps: project.steps.map(step => {
-            if (step.id === stepId) {
-              return { ...step, tasks: [...step.tasks, task] };
-            }
-            return step;
-          })
-        };
-      }
-      return project;
-    });
-
+  const addTask = useCallback((projectId: string, stepId: string, title: string) => {
+    const updatedProjects = optimizedAddTask(projectId, stepId, title, projects);
     setProjects(updatedProjects);
-    
+
     if (selectedProject?.id === projectId) {
       setSelectedProject(updatedProjects.find(p => p.id === projectId) || null);
     }
-  };
+  }, [projects, selectedProject, optimizedAddTask]);
 
-  const toggleTask = (taskId: string) => {
-    const updatedProjects = projects.map(project => ({
-      ...project,
-      steps: project.steps.map(step => ({
-        ...step,
-        tasks: step.tasks.map(task => {
-          if (task.id === taskId) {
-            return {
-              ...task,
-              completed: !task.completed,
-              completedAt: !task.completed ? new Date() : undefined
-            };
-          }
-          return task;
-        })
-      }))
-    }));
-
+  const toggleTask = useCallback((taskId: string) => {
+    const updatedProjects = optimizedToggleTask(taskId, projects);
     setProjects(updatedProjects);
-    
+
     if (selectedProject) {
       setSelectedProject(updatedProjects.find(p => p.id === selectedProject.id) || null);
     }
-  };
+  }, [projects, selectedProject, optimizedToggleTask]);
 
   const toggleExpanded = (projectId: string) => {
     const newExpanded = new Set(expandedProjects);
@@ -417,62 +360,8 @@ export default function ProjectsPage() {
             </button>
           </div>
 
-          {/* Statistics Cards - Style identique à la page des tâches */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{projects.length}</p>
-                  <p className="text-sm text-gray-600 mt-1">Total des projets</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Target className="h-6 w-6 text-blue-600" />
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {projects.filter(p => p.status === 'completed').length}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">Terminés</p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {projects.filter(p => p.status === 'in-progress').length}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">En cours</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-blue-600" />
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {projects.filter(p => p.status === 'overdue').length}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">En retard</p>
-                </div>
-                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                  <AlertCircle className="h-6 w-6 text-red-600" />
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Statistics Cards - Optimized with memoized stats */}
+          <ProjectStats projects={projects} getProjectStats={getProjectStats} />
 
           {/* Projects Grid - Style moderne comme les tuiles de tâches */}
           <div className={`${projects.length === 0 ? 'text-center py-12' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
@@ -508,9 +397,9 @@ export default function ProjectsPage() {
                     }`}
                   >
                     {/* Header with title and category */}
-                    <div className="flex items-start gap-4 mb-4">
+                    <div className="flex items-start gap-4 mb-6">
                       <div className="flex-1 min-w-0">
-                        <h3 className={`font-semibold text-gray-900 mb-2 line-clamp-2 ${
+                        <h3 className={`text-xl font-bold text-gray-900 mb-3 line-clamp-2 ${
                           project.status === 'completed' ? 'line-through text-gray-500' : ''
                         }`}>
                           {project.title}
@@ -533,7 +422,7 @@ export default function ProjectsPage() {
 
                     {/* Description */}
                     {project.description && (
-                      <p className={`text-sm text-gray-600 mb-4 line-clamp-2 ${
+                      <p className={`text-base text-gray-600 mb-6 line-clamp-3 ${
                         project.status === 'completed' ? 'text-gray-500' : ''
                       }`}>
                         {project.description}
@@ -541,7 +430,7 @@ export default function ProjectsPage() {
                     )}
 
                     {/* Status and steps count */}
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-2 text-sm">
                         <Trello className="h-4 w-4 text-gray-400" />
                         <span className="text-gray-600">
@@ -560,7 +449,7 @@ export default function ProjectsPage() {
                     </div>
 
                     {/* Progress bar */}
-                    <div className="mb-4">
+                    <div className="mb-6">
                       <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
                         <span>Progression</span>
                         <span className="font-medium">{project.progress}%</span>
@@ -616,18 +505,19 @@ export default function ProjectsPage() {
                         </h4>
                         <div className="space-y-2">
                           {project.steps.map((step) => (
-                            <div key={step.id} className="bg-gray-50 rounded-lg p-3">
+                            <div key={step.id} className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-all duration-200 group">
                               <div className="flex items-center gap-3">
                                 <button
                                   onClick={() => toggleStep(step.id)}
-                                  className="flex-shrink-0 transition-all duration-200 hover:scale-105"
+                                  className="flex-shrink-0 transition-all duration-200 hover:scale-105 cursor-pointer"
+                                  title={step.completed ? "Marquer comme non terminé" : "Marquer comme terminé"}
                                 >
                                   {step.completed ? (
                                     <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
                                       <CheckCircle className="h-3 w-3 text-white" />
                                     </div>
                                   ) : (
-                                    <div className="w-5 h-5 border-2 border-gray-300 rounded-full hover:border-blue-500 transition-colors" />
+                                    <div className="w-5 h-5 border border-gray-300 rounded-full hover:border-blue-500 hover:bg-blue-50 transition-colors" />
                                   )}
                                 </button>
                                 <div className="flex-1 min-w-0">
@@ -799,10 +689,10 @@ export default function ProjectsPage() {
                                       e.stopPropagation();
                                       toggleStep(step.id);
                                     }}
-                                    className="w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0"
+                                    className="w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0 cursor-pointer"
                                     style={{
                                       backgroundColor: step.completed ? '#10b981' : '#f3f4f6',
-                                      border: step.completed ? 'none' : '2px solid #d1d5db'
+                                      border: step.completed ? 'none' : '1px solid #d1d5db'
                                     }}
                                   >
                                     {step.completed && <CheckCircle className="h-4 w-4 text-white" />}
@@ -842,20 +732,23 @@ export default function ProjectsPage() {
                                 <div className="border-t border-gray-100 bg-gray-50 p-4">
                                   <div className="space-y-3">
                                     {step.tasks.map((task) => (
-                                      <div key={task.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                                      <div key={task.id} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:bg-gray-50 group">
                                         <button
                                           onClick={() => toggleTask(task.id)}
-                                          className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-all duration-200 hover:scale-110"
-                                          style={{
-                                            backgroundColor: task.completed ? '#10b981' : '#f3f4f6',
-                                            border: task.completed ? 'none' : '2px solid #d1d5db'
-                                          }}
+                                          className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-all duration-200 hover:scale-110 cursor-pointer ${
+                                            task.completed
+                                              ? 'bg-green-500'
+                                              : 'bg-gray-100 border border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+                                          }`}
                                         >
                                           {task.completed && <CheckCircle className="h-3 w-3 text-white" />}
                                         </button>
-                                        <p className={`text-sm font-medium flex-1 ${
-                                          task.completed ? 'text-gray-500 line-through' : 'text-gray-800'
-                                        }`}>
+                                        <p
+                                          className={`text-sm font-medium flex-1 cursor-pointer ${
+                                            task.completed ? 'text-gray-500 line-through' : 'text-gray-800'
+                                          }`}
+                                          onClick={() => toggleTask(task.id)}
+                                        >
                                           {task.title}
                                         </p>
                                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
@@ -871,14 +764,14 @@ export default function ProjectsPage() {
 
                                     {/* Add Task Input */}
                                     {addingTaskToStep === step.id ? (
-                                      <div className="p-4 bg-white rounded-lg border border-gray-200">
+                                      <div className="p-4 bg-white rounded-lg shadow-sm border-0">
                                         <div className="flex gap-2">
                                           <input
                                             type="text"
                                             value={newTaskTitle}
                                             onChange={(e) => setNewTaskTitle(e.target.value)}
                                             placeholder="Titre de la nouvelle tâche..."
-                                            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                                             autoFocus
                                             onKeyPress={(e) => {
                                               if (e.key === 'Enter' && newTaskTitle.trim()) {
@@ -909,7 +802,7 @@ export default function ProjectsPage() {
                                               setNewTaskTitle('');
                                               setAddingTaskToStep(null);
                                             }}
-                                            className="px-4 py-2 text-gray-600 border border-gray-300 text-sm rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                                            className="px-4 py-2 text-gray-600 border border-gray-200 text-sm rounded-lg hover:bg-gray-50 transition-colors font-medium"
                                           >
                                             Annuler
                                           </button>
@@ -918,7 +811,7 @@ export default function ProjectsPage() {
                                     ) : (
                                       <button
                                         onClick={() => setAddingTaskToStep(step.id)}
-                                        className="w-full p-3 text-sm text-gray-600 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 font-medium"
+                                        className="w-full p-3 text-sm text-gray-600 border border-dashed border-gray-200 rounded-lg hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 font-medium"
                                       >
                                         <Plus className="h-4 w-4 mr-2 inline" />
                                         Ajouter une tâche
@@ -1180,3 +1073,71 @@ export default function ProjectsPage() {
     </MainLayout>
   );
 }
+
+// Optimized ProjectStats component with memoization
+const ProjectStats = React.memo(({ projects, getProjectStats }: {
+  projects: Project[];
+  getProjectStats: (projects: Project[]) => {
+    total: number;
+    completed: number;
+    inProgress: number;
+    overdue: number;
+    notStarted: number;
+  };
+}) => {
+  const stats = getProjectStats(projects);
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+            <p className="text-sm text-gray-600 mt-1">Total des projets</p>
+          </div>
+          <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <Target className="h-6 w-6 text-blue-600" />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-2xl font-bold text-gray-900">{stats.completed}</p>
+            <p className="text-sm text-gray-600 mt-1">Terminés</p>
+          </div>
+          <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+            <CheckCircle className="h-6 w-6 text-green-600" />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-2xl font-bold text-gray-900">{stats.inProgress}</p>
+            <p className="text-sm text-gray-600 mt-1">En cours</p>
+          </div>
+          <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <TrendingUp className="h-6 w-6 text-blue-600" />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-2xl font-bold text-gray-900">{stats.overdue}</p>
+            <p className="text-sm text-gray-600 mt-1">En retard</p>
+          </div>
+          <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+            <AlertCircle className="h-6 w-6 text-red-600" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+ProjectStats.displayName = 'ProjectStats';
