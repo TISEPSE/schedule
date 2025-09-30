@@ -69,7 +69,7 @@ export default function NoteReadView({ note, category, onBack, onEdit }: NoteRea
           <ReactMarkdown 
             remarkPlugins={[remarkGfm]}
             components={{
-              h1: ({ children }) => <h1 className="text-2xl font-bold text-black mb-4 pb-2 border-b">{children}</h1>,
+              h1: ({ children }) => <h1 className="text-2xl font-bold text-black mb-4">{children}</h1>,
               h2: ({ children }) => <h2 className="text-xl font-bold text-black mb-3 mt-6">{children}</h2>,
               h3: ({ children }) => <h3 className="text-lg font-semibold text-black mb-2 mt-4">{children}</h3>,
               p: ({ children }) => <p className="text-gray-700 mb-4 leading-relaxed">{children}</p>,

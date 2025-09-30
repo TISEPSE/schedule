@@ -517,7 +517,7 @@ export default function ProjectsPage() {
                                       <CheckCircle className="h-3 w-3 text-white" />
                                     </div>
                                   ) : (
-                                    <div className="w-5 h-5 border border-gray-300 rounded-full hover:border-blue-500 hover:bg-blue-50 transition-colors" />
+                                    <div className="w-5 h-5 bg-gray-200 rounded-full hover:bg-blue-50 transition-colors" />
                                   )}
                                 </button>
                                 <div className="flex-1 min-w-0">
@@ -664,7 +664,7 @@ export default function ProjectsPage() {
                           return (
                             <div
                               key={step.id}
-                              className={`bg-white rounded-xl border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${
+                              className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${
                                 step.priority === 'high' ? 'border-l-4 border-l-red-400' :
                                 step.priority === 'medium' ? 'border-l-4 border-l-orange-400' :
                                 'border-l-4 border-l-green-400'
@@ -738,7 +738,7 @@ export default function ProjectsPage() {
                                           className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-all duration-200 hover:scale-110 cursor-pointer ${
                                             task.completed
                                               ? 'bg-green-500'
-                                              : 'bg-gray-100 border border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+                                              : 'bg-gray-100 hover:bg-blue-50'
                                           }`}
                                         >
                                           {task.completed && <CheckCircle className="h-3 w-3 text-white" />}
@@ -764,7 +764,7 @@ export default function ProjectsPage() {
 
                                     {/* Add Task Input */}
                                     {addingTaskToStep === step.id ? (
-                                      <div className="p-4 bg-white rounded-lg shadow-sm border-0">
+                                      <div className="p-4 bg-white rounded-lg shadow-sm">
                                         <div className="flex gap-2">
                                           <input
                                             type="text"
