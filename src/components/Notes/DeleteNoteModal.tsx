@@ -60,8 +60,8 @@ export default function DeleteNoteModal({ isOpen, onClose, onConfirm, note }: De
           </p>
           <div className="bg-gray-50 rounded-lg p-3 border-l-4 border-red-400">
             <h4 className="font-medium text-gray-900 mb-1">{note.title}</h4>
-            {note.description && (
-              <p className="text-sm text-gray-600">{note.description}</p>
+            {note.content && (
+              <p className="text-sm text-gray-600">{note.content.substring(0, 100)}{note.content.length > 100 ? '...' : ''}</p>
             )}
           </div>
           <p className="text-sm text-red-600 mt-3">

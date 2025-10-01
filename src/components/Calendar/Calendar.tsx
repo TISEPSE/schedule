@@ -261,7 +261,7 @@ export default function Calendar() {
               ))}
 
               {/* Grille des jours */}
-              {days.map((dayObj, index) => {
+              {days.map((dayObj) => {
                 const day = dayObj.date;
                 const isCurrentMonth = dayObj.isCurrentMonth;
                 const isToday = day.toDateString() === today.toDateString();

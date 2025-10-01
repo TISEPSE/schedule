@@ -51,8 +51,6 @@ interface Task {
 export default function ProjectsPage() {
   const { user, logout } = useAuth();
   const {
-    toggleStep: optimizedToggleStep,
-    toggleTask: optimizedToggleTask,
     addTask: optimizedAddTask,
     addStep: optimizedAddStep,
     createProject: optimizedCreateProject,
@@ -614,7 +612,7 @@ export default function ProjectsPage() {
                           Étapes ({completedSteps}/{totalSteps})
                         </h4>
                         <div className="space-y-2">
-                          {project.steps.map((step, stepIndex) => (
+                          {project.steps.map((step) => (
                             <div key={`step-${step.id}`} className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-all duration-200 group">
                               <div className="flex items-center gap-3">
                                 <button
@@ -767,7 +765,7 @@ export default function ProjectsPage() {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {selectedProject.steps.map((step, stepIndex) => {
+                        {selectedProject.steps.map((step) => {
                           const isStepModalExpanded = expandedSteps.has(`modal-${step.id}`);
                           const completedTasks = step.tasks.filter(t => t.completed).length;
 
@@ -841,7 +839,7 @@ export default function ProjectsPage() {
                               {isStepModalExpanded && (
                                 <div className="border-t border-gray-100 bg-gray-50 p-4">
                                   <div className="space-y-3">
-                                    {step.tasks.map((task, taskIndex) => (
+                                    {step.tasks.map((task) => (
                                       <div key={`task-${task.id}`} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:bg-gray-50 group">
                                         <button
                                           onClick={() => toggleTask(task.id)}
@@ -1087,7 +1085,7 @@ export default function ProjectsPage() {
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer text-gray-900 font-medium"
                     >
                       <option value="">Sélectionner un projet</option>
-                      {projects.map((project, projectIndex) => (
+                      {projects.map((project) => (
                         <option key={project.id} value={project.id}>{project.title}</option>
                       ))}
                     </select>
@@ -1099,7 +1097,7 @@ export default function ProjectsPage() {
                 <div className="space-y-2">
                   <label className="flex items-center text-sm font-semibold text-gray-800 mb-3">
                     <Trello className="h-4 w-4 mr-2 text-blue-600" />
-                    Titre de l'étape
+                    Titre de l&apos;étape
                   </label>
                   <input
                     type="text"
@@ -1156,7 +1154,7 @@ export default function ProjectsPage() {
                   <div className="space-y-2">
                     <label className="flex items-center text-sm font-semibold text-gray-800 mb-3">
                       <Clock className="h-4 w-4 mr-2 text-green-600" />
-                      Date d'échéance
+                      Date d&apos;échéance
                     </label>
                     <input
                       type="date"
@@ -1183,7 +1181,7 @@ export default function ProjectsPage() {
                 >
                   <span className="flex items-center justify-center">
                     <Plus className="h-4 w-4 mr-2" />
-                    Créer l'étape
+                    Créer l&apos;étape
                   </span>
                 </button>
               </div>

@@ -56,10 +56,12 @@ export default function NoteReadView({ note, category, onBack, onEdit }: NoteRea
         </button>
       </div>
 
-      {/* Description */}
-      {note.description && (
+      {/* Aperçu du contenu */}
+      {note.content && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <p className="text-gray-700 text-base leading-relaxed font-medium">{note.description}</p>
+          <p className="text-gray-700 text-base leading-relaxed font-medium">
+            {note.content.length > 200 ? note.content.substring(0, 200) + '...' : note.content}
+          </p>
         </div>
       )}
 

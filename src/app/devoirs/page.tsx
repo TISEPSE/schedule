@@ -66,55 +66,6 @@ export default function DevoirsPage() {
     setLocalAssignments(updatedAssignments);
   }, [assignments, pendingUpdates]);
 
-  // Synchronisation différée des mises à jour
-  useEffect(() => {
-    if (pendingUpdates.size > 0) {
-      const timer = setTimeout(async () => {
-        const updatesToSync = new Map(pendingUpdates);
-        setPendingUpdates(new Map());
-        
-        try {
-          await Promise.all(
-            Array.from(updatesToSync.values()).map(assignment => 
-              updateAssignment(assignment).catch(err => 
-                console.error('Erreur sync:', assignment.id, err)
-              )
-            )
-          );
-        } catch (error) {
-          console.error('Erreur lors de la synchronisation:', error);
-          setPendingUpdates(prev => new Map([...prev, ...updatesToSync]));
-        }
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [pendingUpdates, updateAssignment]);
-
-  if (!user) {
-    redirect('/');
-  }
-
-  if (user.role === 'admin') {
-    return (
-      <MainLayout user={user} onLogout={logout}>
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">{pageTitle}</h1>
-            <div className="bg-gray-50 rounded-xl p-8 text-center">
-              <p className="text-gray-600">
-                Gérez les devoirs de tous les étudiants et créez de nouvelles tâches.
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                Fonctionnalités prévues : attribution de devoirs, suivi des rendus, évaluations...
-              </p>
-            </div>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
   // Filtrer et trier les assignments avec useMemo pour optimiser les performances
   const filteredAssignments = useMemo(() => {
     return localAssignments
@@ -184,7 +135,7 @@ export default function DevoirsPage() {
       completed: !assignment.completed
     };
 
-    setLocalAssignments(prev => 
+    setLocalAssignments(prev =>
       prev.map(a => a.id === assignmentId ? updatedAssignment : a)
     );
 
@@ -195,6 +146,54 @@ export default function DevoirsPage() {
     });
   }, [localAssignments]);
 
+  // Synchronisation différée des mises à jour
+  useEffect(() => {
+    if (pendingUpdates.size > 0) {
+      const timer = setTimeout(async () => {
+        const updatesToSync = new Map(pendingUpdates);
+        setPendingUpdates(new Map());
+
+        try {
+          await Promise.all(
+            Array.from(updatesToSync.values()).map(assignment =>
+              updateAssignment(assignment).catch(err =>
+                console.error('Erreur sync:', assignment.id, err)
+              )
+            )
+          );
+        } catch (error) {
+          console.error('Erreur lors de la synchronisation:', error);
+          setPendingUpdates(prev => new Map([...prev, ...updatesToSync]));
+        }
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [pendingUpdates, updateAssignment]);
+
+  if (!user) {
+    redirect('/');
+  }
+
+  if (user.role === 'admin') {
+    return (
+      <MainLayout user={user} onLogout={logout}>
+        <div className="space-y-6">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">{pageTitle}</h1>
+            <div className="bg-gray-50 rounded-xl p-8 text-center">
+              <p className="text-gray-600">
+                Gérez les devoirs de tous les étudiants et créez de nouvelles tâches.
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                Fonctionnalités prévues : attribution de devoirs, suivi des rendus, évaluations...
+              </p>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
 
   return (
