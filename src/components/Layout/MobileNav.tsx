@@ -92,9 +92,9 @@ export default function MobileNav({ userRole }: MobileNavProps) {
       {/* Indicateur de scroll si nécessaire */}
       <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
         <div className="flex space-x-1">
-          {navItems.map((_, index) => (
+          {navItems.map((item, index) => (
             <div
-              key={index}
+              key={`indicator-${index}`}
               className="w-1 h-1 bg-gray-300 rounded-full opacity-50"
             />
           ))}

@@ -614,8 +614,8 @@ export default function ProjectsPage() {
                           Étapes ({completedSteps}/{totalSteps})
                         </h4>
                         <div className="space-y-2">
-                          {project.steps.map((step) => (
-                            <div key={step.id} className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-all duration-200 group">
+                          {project.steps.map((step, stepIndex) => (
+                            <div key={`step-${step.id}`} className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-all duration-200 group">
                               <div className="flex items-center gap-3">
                                 <button
                                   onClick={() => toggleStep(step.id)}
@@ -767,13 +767,13 @@ export default function ProjectsPage() {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {selectedProject.steps.map((step) => {
+                        {selectedProject.steps.map((step, stepIndex) => {
                           const isStepModalExpanded = expandedSteps.has(`modal-${step.id}`);
                           const completedTasks = step.tasks.filter(t => t.completed).length;
 
                           return (
                             <div
-                              key={step.id}
+                              key={`modal-step-${step.id}`}
                               className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${
                                 step.priority === 'high' ? 'border-l-4 border-l-red-400' :
                                 step.priority === 'medium' ? 'border-l-4 border-l-orange-400' :
@@ -841,8 +841,8 @@ export default function ProjectsPage() {
                               {isStepModalExpanded && (
                                 <div className="border-t border-gray-100 bg-gray-50 p-4">
                                   <div className="space-y-3">
-                                    {step.tasks.map((task) => (
-                                      <div key={task.id} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:bg-gray-50 group">
+                                    {step.tasks.map((task, taskIndex) => (
+                                      <div key={`task-${task.id}`} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:bg-gray-50 group">
                                         <button
                                           onClick={() => toggleTask(task.id)}
                                           className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-all duration-200 hover:scale-110 cursor-pointer ${
@@ -1087,7 +1087,7 @@ export default function ProjectsPage() {
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer text-gray-900 font-medium"
                     >
                       <option value="">Sélectionner un projet</option>
-                      {projects.map(project => (
+                      {projects.map((project, projectIndex) => (
                         <option key={project.id} value={project.id}>{project.title}</option>
                       ))}
                     </select>

@@ -8,13 +8,12 @@ interface SimpleNoteEditorProps {
   note: Note;
   category: Category;
   onBack: () => void;
-  onUpdate: (content: string, description?: string, title?: string) => void;
+  onUpdate: (content: string, title?: string) => void;
 }
 
 export default function SimpleNoteEditor({ note, category, onBack, onUpdate }: SimpleNoteEditorProps) {
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
-  const [description, setDescription] = useState(note.description);
   const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
 
   const getCategoryStyles = (color: string) => {
@@ -30,13 +29,13 @@ export default function SimpleNoteEditor({ note, category, onBack, onUpdate }: S
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (content !== note.content || description !== note.description || title !== note.title) {
-        onUpdate(content, description, title);
+      if (content !== note.content || title !== note.title) {
+        onUpdate(content, title);
       }
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [content, description, title, note.content, note.description, note.title, onUpdate]);
+  }, [content, title, note.content, note.title, onUpdate]);
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -77,7 +76,7 @@ export default function SimpleNoteEditor({ note, category, onBack, onUpdate }: S
           </button>
           <button
             onClick={() => {
-              onUpdate(content, description, title);
+              onUpdate(content, title);
               onBack();
             }}
             className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
@@ -129,19 +128,6 @@ export default function SimpleNoteEditor({ note, category, onBack, onUpdate }: S
         </div>
       )}
 
-      {/* Description en haut */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Description
-        </label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description de la note..."
-          className="w-full p-3 border border-gray-200 rounded-lg text-black resize-none focus:outline-none focus:border-blue-500"
-          rows={2}
-        />
-      </div>
 
       {/* Éditeur markdown simple */}
       <div className="mb-4">

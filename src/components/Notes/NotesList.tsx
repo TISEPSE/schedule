@@ -152,9 +152,9 @@ export default function NotesList({
               {/* Tags */}
               {note.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-3">
-                  {note.tags.slice(0, 3).map(tag => (
+                  {note.tags.slice(0, 3).map((tag, tagIndex) => (
                     <span
-                      key={tag}
+                      key={`${note.id}-tag-${tagIndex}`}
                       className="inline-flex items-center space-x-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs"
                     >
                       <Tag className="h-3 w-3" />

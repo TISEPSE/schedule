@@ -45,21 +45,21 @@ export default function Calendar() {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    
+
     // Lundi = 0 (au lieu de dimanche = 0)
     const startingDayOfWeek = (firstDay.getDay() + 6) % 7;
     const days = [];
-    
+
     // Jours du mois précédent
-    const prevMonth = new Date(year, month - 1, 0);
-    const daysInPrevMonth = prevMonth.getDate();
     for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+      const prevMonthDate = new Date(year, month - 1, 0);
+      const daysInPrevMonth = prevMonthDate.getDate();
       days.push({
         date: new Date(year, month - 1, daysInPrevMonth - i),
         isCurrentMonth: false
       });
     }
-    
+
     // Jours du mois actuel
     for (let day = 1; day <= daysInMonth; day++) {
       days.push({
@@ -67,7 +67,7 @@ export default function Calendar() {
         isCurrentMonth: true
       });
     }
-    
+
     // Jours du mois suivant (compléter jusqu'à 42)
     let nextMonthDay = 1;
     while (days.length < 42) {
@@ -77,7 +77,7 @@ export default function Calendar() {
       });
       nextMonthDay++;
     }
-    
+
     return days;
   };
 
@@ -271,7 +271,7 @@ export default function Calendar() {
 
                 return (
                   <button
-                    key={`${day.getFullYear()}-${day.getMonth()}-${day.getDate()}-${index}`}
+                    key={day.getTime()}
                     onClick={() => {
                       if (!isCurrentMonth) {
                         setCurrentDate(new Date(day.getFullYear(), day.getMonth(), 1));
@@ -319,15 +319,16 @@ export default function Calendar() {
                     {hasEvents && isCurrentMonth && (
                       <div className="absolute bottom-2 left-2 right-2">
                         <div className="flex justify-center space-x-1">
-                          {eventsForDay.slice(0, 3).map(event => (
+                          {eventsForDay.slice(0, 3).map((event, eventIndex) => (
                             <div
-                              key={event.id}
+                              key={`${event.id}-${eventIndex}`}
                               className={`w-3 h-3 rounded-full ${event.color} shadow-sm border-2 border-white transition-transform duration-200 group-hover:scale-110`}
                               title={event.title}
                             ></div>
                           ))}
                           {eventsForDay.length > 3 && (
-                            <div 
+                            <div
+                              key={`more-indicator-${day.getTime()}`}
                               className="w-3 h-3 rounded-full bg-gray-400 shadow-sm border-2 border-white transition-transform duration-200 group-hover:scale-110"
                               title={`+${eventsForDay.length - 3} autres événements`}
                             ></div>
@@ -373,8 +374,8 @@ export default function Calendar() {
           </div>
           <div className="space-y-3">
             {selectedEvents.map((event, index) => (
-              <button 
-                key={event.id} 
+              <button
+                key={`event-${event.id}-${index}`}
                 onClick={() => handleEventClick(event)}
                 className="group w-full flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-50 to-gray-50/50 hover:from-blue-50 hover:to-blue-100/30 rounded-xl transition-all duration-200 text-left transform hover:scale-[1.01] hover:shadow-md border border-transparent hover:border-blue-200"
                 style={{ animationDelay: `${index * 50}ms` }}
@@ -403,31 +404,6 @@ export default function Calendar() {
         </div>
       )}
 
-      {/* Message quand une date est sélectionnée mais sans événements */}
-      {viewMode === 'calendar' && selectedDate && selectedEvents.length === 0 && (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-in slide-in-from-bottom-4 duration-300">
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Aucun événement prévu
-            </h3>
-            <p className="text-gray-500 mb-4">
-              Le {selectedDate.getDate()} {monthNames[selectedDate.getMonth()]} est libre
-            </p>
-            <button 
-              onClick={handleAddEventClick}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-xl transition-colors flex items-center space-x-2 mx-auto"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Ajouter un événement</span>
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Modales */}
       <EventModal

@@ -61,7 +61,7 @@ export function AnimatedList({
     <>
       {children.map((child, index) => (
         <AnimatedContainer
-          key={index}
+          key={`child-${index}`}
           className={className}
           delay={initialDelay + (index * staggerDelay)}
           animation={animation}

@@ -280,8 +280,8 @@ export default function ClassesPage() {
                         </div>
                         
                         <div className="flex flex-wrap gap-1 mt-2">
-                          {classmate.subjects.map((subject) => (
-                            <span key={subject} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-lg">
+                          {classmate.subjects.map((subject, subjectIndex) => (
+                            <span key={`${classmate.id}-${subjectIndex}`} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-lg">
                               {subject}
                             </span>
                           ))}

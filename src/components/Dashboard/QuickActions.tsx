@@ -91,7 +91,7 @@ export default function QuickActions({ userRole }: QuickActionsProps) {
           const Icon = action.icon;
           return (
             <Link
-              key={index}
+              key={`action-${index}`}
               href={action.href}
               className={`${action.color} p-4 rounded-lg transition-colors group block`}
             >

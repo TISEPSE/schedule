@@ -165,9 +165,9 @@ export default function PlanningView({ userRole, events, initialDate }: Planning
                       <p className="text-xs">Libre</p>
                     </div>
                   ) : (
-                    dayItems.map(item => (
+                    dayItems.map((item, itemIndex) => (
                       <div
-                        key={item.id}
+                        key={`${item.id}-${itemIndex}`}
                         className={`p-3 rounded-lg ${item.bgColor} border border-gray-200 hover:shadow-md transition-shadow`}
                       >
                         <div className="mb-2">

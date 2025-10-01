@@ -14,7 +14,6 @@ import SimpleNoteEditor from '@/components/Notes/SimpleNoteEditor';
 export interface Note {
   id: string;
   title: string;
-  description: string;
   content: string;
   category: string;
   tags: string[];
@@ -60,7 +59,6 @@ export default function NotesPage() {
       try {
         const parsedNotes = JSON.parse(savedNotes).map((note: Note & { createdAt: string; updatedAt: string }) => ({
           ...note,
-          description: note.description || '',
           createdAt: new Date(note.createdAt),
           updatedAt: new Date(note.updatedAt)
         }));
@@ -90,11 +88,10 @@ export default function NotesPage() {
   }
 
   // Fonctions de gestion des notes
-  const createNote = (data: { title: string; description: string; category: string }) => {
+  const createNote = (data: { title: string; category: string }) => {
     const newNote: Note = {
       id: Date.now().toString(),
       title: data.title,
-      description: data.description,
       content: '',
       category: data.category,
       tags: [],
@@ -110,28 +107,26 @@ export default function NotesPage() {
     setIsEditing(true);
   };
 
-  const updateNoteContent = (noteId: string, content: string, description?: string, title?: string) => {
-    const updatedNotes = notes.map(note => 
-      note.id === noteId 
-        ? { 
-            ...note, 
-            content, 
-            description: description !== undefined ? description : note.description,
+  const updateNoteContent = (noteId: string, content: string, title?: string) => {
+    const updatedNotes = notes.map(note =>
+      note.id === noteId
+        ? {
+            ...note,
+            content,
             title: title !== undefined ? title : note.title,
-            updatedAt: new Date() 
+            updatedAt: new Date()
           }
         : note
     );
     setNotes(updatedNotes);
     saveToStorage(updatedNotes, categories);
-    
+
     if (selectedNote && selectedNote.id === noteId) {
-      setSelectedNote({ 
-        ...selectedNote, 
-        content, 
-        description: description !== undefined ? description : selectedNote.description,
+      setSelectedNote({
+        ...selectedNote,
+        content,
         title: title !== undefined ? title : selectedNote.title,
-        updatedAt: new Date() 
+        updatedAt: new Date()
       });
     }
   };
@@ -158,9 +153,8 @@ export default function NotesPage() {
   // Filtrer les notes
   const filteredNotes = notes.filter(note => {
     const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         note.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          note.content.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     return matchesSearch && !note.isArchived;
   });
 
@@ -190,7 +184,7 @@ export default function NotesPage() {
           note={selectedNote}
           category={getCategoryInfo(selectedNote.category)}
           onBack={handleBackToList}
-          onUpdate={(content, description, title) => updateNoteContent(selectedNote.id, content, description, title)}
+          onUpdate={(content, title) => updateNoteContent(selectedNote.id, content, title)}
         />
       </MainLayout>
     );

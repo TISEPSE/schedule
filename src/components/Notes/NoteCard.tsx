@@ -70,9 +70,11 @@ export default function NoteCard({ note, category, onClick, onEdit, onDelete }: 
         </div>
       </div>
 
-      <p className="text-gray-600 text-sm mb-3 leading-relaxed">
-        {note.description || 'Aucune description'}
-      </p>
+      {note.content && (
+        <p className="text-gray-600 text-sm mb-3 leading-relaxed line-clamp-2">
+          {note.content.slice(0, 100)}{note.content.length > 100 ? '...' : ''}
+        </p>
+      )}
 
       <div className="flex items-center justify-between text-xs text-gray-500">
         <div className="flex items-center space-x-1">

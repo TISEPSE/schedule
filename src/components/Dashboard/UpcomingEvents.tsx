@@ -74,7 +74,7 @@ export default function UpcomingEvents({ userRole, events }: UpcomingEventsProps
         
         <div className="space-y-3">
           {items.map((item, index) => (
-            <div key={index} className={`border-l-4 ${item.color} pl-3 py-2.5`}>
+            <div key={`event-${index}`} className={`border-l-4 ${item.color} pl-3 py-2.5`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h4 className="text-base font-medium text-gray-900">{item.title}</h4>

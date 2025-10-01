@@ -8,13 +8,12 @@ import { Category } from '@/app/notes/page';
 interface CreateNoteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: { title: string; description: string; category: string }) => void;
+  onSubmit: (data: { title: string; category: string }) => void;
   categories: Category[];
 }
 
 export default function CreateNoteModal({ isOpen, onClose, onSubmit, categories }: CreateNoteModalProps) {
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
   const [category, setCategory] = useState('general');
   const [mounted, setMounted] = useState(false);
 
@@ -37,9 +36,8 @@ export default function CreateNoteModal({ isOpen, onClose, onSubmit, categories 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (title.trim()) {
-      onSubmit({ title: title.trim(), description: description.trim(), category });
+      onSubmit({ title: title.trim(), category });
       setTitle('');
-      setDescription('');
       setCategory('general');
       onClose();
     }
@@ -47,7 +45,6 @@ export default function CreateNoteModal({ isOpen, onClose, onSubmit, categories 
 
   const handleClose = () => {
     setTitle('');
-    setDescription('');
     setCategory('general');
     onClose();
   };
@@ -80,18 +77,6 @@ export default function CreateNoteModal({ isOpen, onClose, onSubmit, categories 
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-black mb-2">
-              Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Petite description de la note..."
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-black focus:outline-none focus:border-blue-500 resize-none"
-              rows={3}
-            />
-          </div>
 
           <div>
             <label className="block text-sm font-medium text-black mb-2">

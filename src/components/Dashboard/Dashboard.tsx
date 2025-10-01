@@ -165,7 +165,7 @@ export default function Dashboard({ user }: DashboardProps) {
       {/* Stats Grid - Full width */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 page-animate-delay-1">
         {stats.map((stat, index) => (
-          <StatsCard key={index} {...stat} />
+          <StatsCard key={`stats-${index}`} {...stat} />
         ))}
       </div>
 
