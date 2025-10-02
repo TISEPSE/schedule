@@ -28,10 +28,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check for stored user on mount
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      // Ne pas afficher la notification de bienvenue lors du chargement de la page
-      // La notification ne doit s'afficher qu'après une connexion manuelle
+    if (storedUser && storedUser.trim()) {
+      try {
+        setUser(JSON.parse(storedUser));
+        // Ne pas afficher la notification de bienvenue lors du chargement de la page
+        // La notification ne doit s'afficher qu'après une connexion manuelle
+      } catch (error) {
+        console.error('Erreur lors du chargement de l\'utilisateur:', error);
+        localStorage.removeItem('user');
+      }
     }
   }, []);
 

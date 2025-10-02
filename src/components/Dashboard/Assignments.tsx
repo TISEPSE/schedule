@@ -13,6 +13,7 @@ export default function Assignments({ userRole, assignments }: AssignmentsProps)
   if (!assignments) {
     const studentAssignments = [
       {
+        id: 'assignment-1',
         title: 'Révisions Français',
         subject: 'Personnel',
         dueDate: 'Demain',
@@ -20,13 +21,15 @@ export default function Assignments({ userRole, assignments }: AssignmentsProps)
         color: getPriorityColors('high').borderLight,
       },
       {
+        id: 'assignment-2',
         title: 'Projet de groupe',
-        subject: 'Collaboration', 
+        subject: 'Collaboration',
         dueDate: 'Vendredi',
         priority: 'medium',
         color: getPriorityColors('medium').borderLight,
       },
       {
+        id: 'assignment-3',
         title: 'Lecture chapitre 5',
         subject: 'Personnel',
         dueDate: 'Lundi prochain',
@@ -37,6 +40,7 @@ export default function Assignments({ userRole, assignments }: AssignmentsProps)
 
     const adminTasks = [
       {
+        id: 'admin-task-1',
         title: 'Modération utilisateurs',
         subject: 'Administration',
         dueDate: 'Aujourd\'hui',
@@ -44,6 +48,7 @@ export default function Assignments({ userRole, assignments }: AssignmentsProps)
         color: getPriorityColors('high').borderLight,
       },
       {
+        id: 'admin-task-2',
         title: 'Mise à jour système',
         subject: 'Technique',
         dueDate: 'Cette semaine',
@@ -51,6 +56,7 @@ export default function Assignments({ userRole, assignments }: AssignmentsProps)
         color: getPriorityColors('medium').borderLight,
       },
       {
+        id: 'admin-task-3',
         title: 'Rapport d\'activité',
         subject: 'Administratif',
         dueDate: 'Fin du mois',
@@ -71,7 +77,7 @@ export default function Assignments({ userRole, assignments }: AssignmentsProps)
         
         <div className="space-y-3">
           {items.map((item, index) => (
-            <div key={index} className={`border-l-4 ${item.color} pl-3 py-2.5`}>
+            <div key={item.id || `assignment-${item.title}-${index}`} className={`border-l-4 ${item.color} pl-3 py-2.5`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h4 className="text-base font-medium text-gray-900">{item.title}</h4>

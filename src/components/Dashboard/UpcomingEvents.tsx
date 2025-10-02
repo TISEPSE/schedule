@@ -13,6 +13,7 @@ export default function UpcomingEvents({ userRole, events }: UpcomingEventsProps
   if (!events) {
     const adminEvents = [
       {
+        id: 'admin-event-1',
         title: 'Maintenance serveur',
         time: '14:00',
         location: 'À distance',
@@ -20,6 +21,7 @@ export default function UpcomingEvents({ userRole, events }: UpcomingEventsProps
         color: 'border-l-blue-500',
       },
       {
+        id: 'admin-event-2',
         title: 'Réunion équipe',
         time: '16:30',
         location: 'Visio',
@@ -27,6 +29,7 @@ export default function UpcomingEvents({ userRole, events }: UpcomingEventsProps
         color: 'border-l-green-500',
       },
       {
+        id: 'admin-event-3',
         title: 'Formation sécurité',
         time: '10:00',
         location: 'Salle de conf',
@@ -37,6 +40,7 @@ export default function UpcomingEvents({ userRole, events }: UpcomingEventsProps
 
     const studentEvents = [
       {
+        id: 'student-event-1',
         title: 'Mathématiques',
         time: '08:00',
         location: 'Salle A12',
@@ -45,6 +49,7 @@ export default function UpcomingEvents({ userRole, events }: UpcomingEventsProps
         type: 'course'
       },
       {
+        id: 'student-event-2',
         title: 'Informatique',
         time: '14:00',
         location: 'Lab B3',
@@ -53,6 +58,7 @@ export default function UpcomingEvents({ userRole, events }: UpcomingEventsProps
         type: 'practical'
       },
       {
+        id: 'student-event-3',
         title: 'Contrôle Français',
         time: '10:00',
         location: 'Amphi C',
@@ -74,7 +80,7 @@ export default function UpcomingEvents({ userRole, events }: UpcomingEventsProps
         
         <div className="space-y-3">
           {items.map((item, index) => (
-            <div key={`event-${index}`} className={`border-l-4 ${item.color} pl-3 py-2.5`}>
+            <div key={item.id || `event-${item.title}-${index}`} className={`border-l-4 ${item.color} pl-3 py-2.5`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h4 className="text-base font-medium text-gray-900">{item.title}</h4>

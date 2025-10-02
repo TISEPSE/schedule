@@ -110,7 +110,7 @@ export default function RecentActivity({ userRole, assignments, events }: Recent
         <div className="max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           <div className="space-y-3 pr-2">
             {activities.map((activity, index) => (
-              <div key={index} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+              <div key={`activity-${activity.title}-${activity.time || index}`} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
                 <div className={`p-1.5 rounded-full bg-gray-100`}>
                   <activity.icon className={`h-3 w-3 ${activity.color}`} />
                 </div>
@@ -291,7 +291,7 @@ export default function RecentActivity({ userRole, assignments, events }: Recent
         <div className="space-y-3 pr-2">
           {recentActivities.length > 0 ? (
             recentActivities.map((activity, index) => (
-              <div key={index} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+              <div key={`recent-${activity.title}-${activity.time || index}`} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
                 <div className="p-1.5 rounded-full bg-gray-100">
                   <activity.icon className={`h-3 w-3 ${activity.color}`} />
                 </div>

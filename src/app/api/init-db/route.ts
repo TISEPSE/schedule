@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 
 import { ServerDatabaseService, initializeDatabase } from '@/lib/database/server';

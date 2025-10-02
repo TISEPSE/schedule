@@ -106,7 +106,7 @@ export default function SignupForm({
                 <p className="text-red-700 text-sm mb-2">{error}</p>
               )}
               {validationErrors.map((err, index) => (
-                <p key={index} className="text-red-700 text-sm">• {err}</p>
+                <p key={`error-${err.substring(0, 20)}-${index}`} className="text-red-700 text-sm">• {err}</p>
               ))}
             </div>
           )}

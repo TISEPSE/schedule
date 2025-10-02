@@ -324,7 +324,7 @@ export default function BulletinPage() {
                   <div className="flex items-center justify-between text-sm mb-3">
                     <div className="flex space-x-2">
                       {subject.notes.map((note, index) => (
-                        <span key={index} className="px-2 py-1 bg-white rounded-lg font-medium text-gray-700">
+                        <span key={`${subject.id}-note-${index}`} className="px-2 py-1 bg-white rounded-lg font-medium text-gray-700">
                           {note}
                         </span>
                       ))}

@@ -9,6 +9,7 @@ import NextClass from './NextClass';
 import Assignments from './Assignments';
 import DataTestPanel from '../Test/DataTestPanel';
 import { useApiData } from '@/hooks/useApiData';
+import { useState, useEffect } from 'react';
 
 interface DashboardProps {
   user: User;
@@ -84,7 +85,7 @@ const studentStats = [
   },
 ];
 
-const personalStats = [
+const getPersonalStats = (sessionTime: string) => [
   {
     title: 'Tâches du jour',
     value: '4',
@@ -94,7 +95,7 @@ const personalStats = [
   },
   {
     title: 'Temps travaillé',
-    value: '6h 30m',
+    value: sessionTime,
     icon: Clock,
     color: 'bg-green-500',
     trend: 'aujourd\'hui',
@@ -117,7 +118,30 @@ const personalStats = [
 
 export default function Dashboard({ user }: DashboardProps) {
   const { assignments, events } = useApiData(user.id);
-  
+
+  // Timer pour afficher le temps écoulé depuis la connexion
+  const [sessionTime, setSessionTime] = useState('0h 0m 0s');
+
+  useEffect(() => {
+    const loginTime = Date.now();
+
+    const updateTimer = () => {
+      const elapsed = Date.now() - loginTime;
+      const hours = Math.floor(elapsed / (1000 * 60 * 60));
+      const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+      setSessionTime(`${hours}h ${minutes}m ${seconds}s`);
+    };
+
+    // Mettre à jour immédiatement
+    updateTimer();
+
+    // Puis mettre à jour toutes les secondes
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Utiliser les vraies données seulement pour l'utilisateur test, sinon données statiques
   const isTestUser = user.id === '4' || user.email === 'test@app.com';
   
@@ -154,8 +178,8 @@ export default function Dashboard({ user }: DashboardProps) {
   ];
 
   const stats = isTestUser ? emptyStats : (
-    user.role === 'admin' ? adminStats : 
-    user.role === 'personal' ? personalStats : 
+    user.role === 'admin' ? adminStats :
+    user.role === 'personal' ? getPersonalStats(sessionTime) :
     studentStats
   );
 
@@ -165,7 +189,7 @@ export default function Dashboard({ user }: DashboardProps) {
       {/* Stats Grid - Full width */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 page-animate-delay-1">
         {stats.map((stat, index) => (
-          <StatsCard key={`stats-${index}`} {...stat} />
+          <StatsCard key={`stats-${stat.title}-${index}`} {...stat} />
         ))}
       </div>
 
