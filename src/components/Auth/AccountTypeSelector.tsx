@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { GraduationCap, User, Building2, ArrowRight, CheckCircle } from 'lucide-react';
 
 export type AccountType = 'personal' | 'student' | 'admin';
@@ -81,8 +80,6 @@ const accountTypes: AccountTypeOption[] = [
 ];
 
 export default function AccountTypeSelector({ onSelectType, onCreateAccount }: AccountTypeSelectorProps) {
-  const [hoveredType, setHoveredType] = useState<AccountType | null>(null);
-
   const handleSelectType = (type: AccountType) => {
     onSelectType(type);
   };
@@ -113,25 +110,16 @@ export default function AccountTypeSelector({ onSelectType, onCreateAccount }: A
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {accountTypes.map((option) => {
             const Icon = option.icon;
-            const isHovered = hoveredType === option.type;
-            
+
             return (
               <div
                 key={option.type}
-                className={`relative transition-all duration-300 transform ${
-                  isHovered 
-                    ? 'scale-102 shadow-lg' 
-                    : 'shadow-md hover:shadow-lg'
-                }`}
-                onMouseEnter={() => setHoveredType(option.type)}
-                onMouseLeave={() => setHoveredType(null)}
+                className="relative shadow-md"
               >
-                <div className="bg-white rounded-xl p-6 h-full border-2 border-transparent hover:border-blue-200">
+                <div className="bg-white rounded-xl p-6 h-full border-2 border-transparent">
                   {/* Header */}
                   <div className="text-center mb-6">
-                    <div className={`inline-flex p-4 rounded-full ${option.color} mb-4 transition-transform duration-300 ${
-                      isHovered ? 'scale-110' : ''
-                    }`}>
+                    <div className={`inline-flex p-4 rounded-full ${option.color} mb-4`}>
                       <Icon className="h-8 w-8 text-white" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">
