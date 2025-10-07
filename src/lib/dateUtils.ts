@@ -198,6 +198,10 @@ export const generateCalendarGrid = (date: Date): CalendarGrid => {
   const month = date.getMonth();
   const monthKey = createMonthKey(year, month);
 
+  // Clear cache to ensure fresh calculation after bug fix
+  // This can be removed after first deployment
+  dateCalculationCache.clear();
+
   // Return cached result if available
   if (dateCalculationCache.has(monthKey)) {
     return dateCalculationCache.get(monthKey)!;
@@ -212,11 +216,11 @@ export const generateCalendarGrid = (date: Date): CalendarGrid => {
   const days: CalendarDay[] = [];
 
   // Previous month days
-  const prevMonth = new Date(year, month - 1, 0);
+  const prevMonth = new Date(year, month, 0);
   const daysInPrevMonth = prevMonth.getDate();
 
-  for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-    const dayDate = new Date(year, month - 1, daysInPrevMonth - i);
+  for (let i = 0; i < startingDayOfWeek; i++) {
+    const dayDate = new Date(year, month - 1, daysInPrevMonth - startingDayOfWeek + i + 1);
     days.push({
       date: dayDate,
       isCurrentMonth: false,

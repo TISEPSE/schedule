@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Grid } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Grid, Trash2, X } from 'lucide-react';
 import { useApiData } from '@/hooks/useApiData';
 import { useAuth } from '@/context/AuthContext';
 import EventModal, { EventFormData } from './EventModal';
@@ -32,7 +32,7 @@ interface OptimizedCalendarProps {
 
 export default function OptimizedCalendar({ className = '' }: OptimizedCalendarProps) {
   const { user } = useAuth();
-  const { events, createEvent, loading, error } = useApiData(user?.id || '');
+  const { events, createEvent, deleteEvent, loading, error } = useApiData(user?.id || '');
 
   // Core calendar state
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -45,6 +45,10 @@ export default function OptimizedCalendar({ className = '' }: OptimizedCalendarP
 
   // View state
   const [viewMode, setViewMode] = useState<'calendar' | 'planning'>('calendar');
+
+  // Delete confirmation state for inline delete
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [isInlineDeleting, setIsInlineDeleting] = useState(false);
 
   // Preload events for performance when date changes
   useEffect(() => {
@@ -145,6 +149,30 @@ export default function OptimizedCalendar({ className = '' }: OptimizedCalendarP
     setCurrentDate(new Date());
   }, []);
 
+  // Inline delete handlers
+  const handleInlineDeleteClick = useCallback((eventId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeleteConfirmId(eventId);
+  }, []);
+
+  const handleConfirmInlineDelete = useCallback(async (eventId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      setIsInlineDeleting(true);
+      await deleteEvent(eventId);
+      setDeleteConfirmId(null);
+    } catch (error) {
+      console.error('Error deleting event:', error);
+    } finally {
+      setIsInlineDeleting(false);
+    }
+  }, [deleteEvent]);
+
+  const handleCancelInlineDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeleteConfirmId(null);
+  }, []);
+
   // Memoized constants
   const monthNames = useMemo(() => [
     'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -206,9 +234,9 @@ export default function OptimizedCalendar({ className = '' }: OptimizedCalendarP
         {hasEvents && day.isCurrentMonth && (
           <div className="absolute bottom-2 left-2 right-2">
             <div className="flex justify-center space-x-1">
-              {eventsForDay.slice(0, 3).map((event, eventIndex) => (
+              {eventsForDay.slice(0, 3).map((event) => (
                 <div
-                  key={`${event.id}-${eventIndex}`}
+                  key={`event-indicator-${event.id}`}
                   className={`w-3 h-3 rounded-full ${event.color} shadow-sm border-2 border-white transition-transform duration-200 group-hover:scale-110`}
                   title={event.title}
                 />
@@ -363,6 +391,7 @@ export default function OptimizedCalendar({ className = '' }: OptimizedCalendarP
                 userRole={user?.role || 'student'}
                 events={events}
                 initialDate={currentDate}
+                onDeleteEvent={deleteEvent}
               />
             </div>
           )}
@@ -382,35 +411,96 @@ export default function OptimizedCalendar({ className = '' }: OptimizedCalendarP
             </span>
           </div>
           <div className="space-y-3">
-            {selectedEvents.map((event, index) => (
-              <button
-                key={event.id}
-                onClick={() => handleEventClick(event)}
-                className="group w-full flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-50 to-gray-50/50 hover:from-blue-50 hover:to-blue-100/30 rounded-xl transition-all duration-200 text-left transform hover:scale-[1.01] hover:shadow-md border border-transparent hover:border-blue-200"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <div className={`w-4 h-4 rounded-full ${event.color} shadow-sm group-hover:scale-110 transition-transform duration-200 flex-shrink-0`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-900 transition-colors duration-200 truncate">
-                    {event.title}
-                  </p>
-                  <p className="text-xs text-gray-500 group-hover:text-blue-600 transition-colors duration-200">
-                    <span className="font-medium">{event.time}</span>
-                    {event.location && (
-                      <>
-                        <span className="mx-1">•</span>
-                        <span className="truncate">{event.location}</span>
-                      </>
+            {selectedEvents.map((event, index) => {
+              const isConfirmingDelete = deleteConfirmId === event.id;
+
+              return (
+                <div
+                  key={event.id}
+                  className="relative"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  {/* Main event button */}
+                  <button
+                    onClick={() => !isConfirmingDelete && handleEventClick(event)}
+                    disabled={isConfirmingDelete}
+                    className={`group w-full flex items-center space-x-4 p-4 rounded-xl transition-all duration-200 text-left transform border ${
+                      isConfirmingDelete
+                        ? 'bg-red-50 border-red-300 cursor-default'
+                        : 'bg-gradient-to-r from-gray-50 to-gray-50/50 hover:from-blue-50 hover:to-blue-100/30 hover:scale-[1.01] hover:shadow-md border-transparent hover:border-blue-200'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded-full ${event.color} shadow-sm group-hover:scale-110 transition-transform duration-200 flex-shrink-0`} />
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold transition-colors duration-200 truncate ${
+                        isConfirmingDelete ? 'text-red-900' : 'text-gray-900 group-hover:text-blue-900'
+                      }`}>
+                        {event.title}
+                      </p>
+                      <p className={`text-xs transition-colors duration-200 ${
+                        isConfirmingDelete ? 'text-red-700' : 'text-gray-500 group-hover:text-blue-600'
+                      }`}>
+                        <span className="font-medium">{event.time}</span>
+                        {event.location && (
+                          <>
+                            <span className="mx-1">•</span>
+                            <span className="truncate">{event.location}</span>
+                          </>
+                        )}
+                      </p>
+                    </div>
+
+                    {/* Delete button - shown on hover */}
+                    {!isConfirmingDelete && (
+                      <button
+                        onClick={(e) => handleInlineDeleteClick(event.id, e)}
+                        className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-50 rounded-lg transition-all duration-200 flex-shrink-0"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="h-4 w-4 text-gray-400 hover:text-red-500 transition-colors" />
+                      </button>
                     )}
-                  </p>
+
+                    {/* View details arrow */}
+                    {!isConfirmingDelete && (
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+
+                  {/* Confirmation overlay */}
+                  {isConfirmingDelete && (
+                    <div className="absolute inset-0 flex items-center justify-end px-4 space-x-2">
+                      <span className="text-sm font-medium text-red-800 mr-2">Supprimer ?</span>
+                      <button
+                        onClick={(e) => handleConfirmInlineDelete(event.id, e)}
+                        disabled={isInlineDeleting}
+                        className="px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-sm font-medium rounded-lg transition-colors flex items-center space-x-1"
+                      >
+                        {isInlineDeleting ? (
+                          <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <Trash2 className="h-3 w-3" />
+                            <span>Oui</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={handleCancelInlineDelete}
+                        disabled={isInlineDeleting}
+                        className="px-3 py-1.5 bg-white hover:bg-gray-100 disabled:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors border border-gray-300"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </button>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -426,6 +516,7 @@ export default function OptimizedCalendar({ className = '' }: OptimizedCalendarP
       <EventDetailsModal
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
+        onDelete={deleteEvent}
         event={selectedEvent}
       />
     </div>

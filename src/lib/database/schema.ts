@@ -11,7 +11,7 @@ export const users = sqliteTable('users', {
   email: text('email').notNull().unique(),
   firstName: text('first_name').notNull(),
   lastName: text('last_name').notNull(),
-  role: text('role', { enum: ['student', 'admin'] }).notNull().default('student'),
+  role: text('role', { enum: ['student', 'admin', 'personal'] }).notNull().default('student'),
   avatar: text('avatar'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
